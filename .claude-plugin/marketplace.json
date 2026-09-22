@@ -1,0 +1,15 @@
+{
+  "name": "agent-kit",
+  "description": "Agent harness for new projects: guards, .agents scaffold, memory and rules mapping skills.",
+  "owner": {
+    "name": "Samuel Oberger Rockenbach",
+    "email": "samuel.rockenbach@univates.br"
+  },
+  "plugins": [
+    {
+      "name": "agent-kit",
+      "source": "./",
+      "description": "Commit/secret/memory-drift guards, .agents scaffold, /memory and /rules mapping skills, explorer agent. Works for any project."
+    }
+  ]
+}
