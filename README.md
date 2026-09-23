@@ -142,6 +142,14 @@ All three guards are checks in one hook, `hooks/guard.sh`, run before every Bash
 - **agent `agent-kit:explorer`** — read-only investigator: maps a new demand or the
   blast radius of a change, returns a report, never edits. The `memory` and
   `update-memory` skills fan out to it.
+- **agent `agent-kit:planner`** — read-only: turns an explorer report into ordered
+  steps, each with its files, the rule or note that constrains it, and its check.
+- **agent `agent-kit:implementer`** — does one planned step: edits code and the stale
+  note, runs the step's check, reports. Never stages or commits.
+- **agent `agent-kit:test-runner`** — finds and runs the project's tests, returns only
+  the failures and their cause. Never edits.
+- **agent `agent-kit:reviewer`** — read-only: checks a diff against the project's own
+  memory, rules and commit/PR policy, the part a generic review does not know.
 - **skills `/agent-kit:update-{all,hooks,memory,rules}`** — review an existing harness;
   see *Update a project* above.
 

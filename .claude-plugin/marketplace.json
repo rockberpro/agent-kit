@@ -9,7 +9,7 @@
     {
       "name": "agent-kit",
       "source": "./",
-      "description": "Commit/secret/memory-drift guards, .agents scaffold, /memory and /rules mapping skills, explorer agent. Works for any project."
+      "description": "Commit/secret/memory-drift guards, .agents scaffold, /memory and /rules mapping skills, explorer/planner/implementer/test-runner/reviewer agents. Works for any project."
     }
   ]
 }
