@@ -3,8 +3,5 @@
   "version": "0.11.0",
   "license": "MIT",
   "description": "Guards (master, secrets, memory drift) + .agents scaffold + memory/rules mapping skills + explorer, planner, implementer, test-runner and reviewer agents. Works for any project.",
-  "author": {
-    "name": "Rockberpro",
-    "email": "rockberpro@gmail.com"
-  }
+  "author": { "name": "agent-kit contributors" }
 }

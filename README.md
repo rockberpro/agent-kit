@@ -178,7 +178,7 @@ for t in hooks/*.test.sh; do bash "$t" || break; done
 # when a skill changed: full memory + rules passes on the fixtures in evals/ (costs real runs)
 claude plugin eval . --scaffold --allow-tools Bash Write Edit --runs 3
 git commit -am "feat(agent-kit): <what changed>"
-claude plugin tag agent-kit          # creates agent-kit--v0.9.0, checking that plugin.json
+claude plugin tag agent-kit          # creates agent-kit--v0.11.0, checking that plugin.json
                                 # and the marketplace.json entry agree
 git push --follow-tags
 ```
@@ -194,10 +194,35 @@ In the projects: `/plugin marketplace update` and restart the session.
 project's `.claude/settings.json`:
 
 ```json
-{ "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git", "ref": "agent-kit--v0.9.0" } }
+{ "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git", "ref": "agent-kit--v0.11.0" } }
 ```
 
 Without `ref` it follows the default branch and picks up everything that lands there.
+
+## Company mirror
+
+A company that cannot depend on someone else's repository keeps its own copy and
+decides when to take updates. The URL lives in one place, `templates/settings.json` —
+that is what `scaffold` writes into every project.
+
+```bash
+git clone https://github.com/rockberpro/agent-kit.git && cd agent-kit
+git remote rename origin upstream
+git remote add origin <company-git-url>
+# point new projects at the mirror: the "url" in templates/settings.json
+git commit -m "chore: point the marketplace at the company mirror" templates/settings.json
+git push -u origin main --tags
+```
+
+Keep the marketplace and plugin names (`agent-kit`, `agent-kit@agent-kit`): projects and
+pins refer to them.
+
+- **Machines:** `claude plugin marketplace add <company-git-url>` instead of the GitHub URL.
+- **Existing projects:** `/agent-kit:update-hooks` offers to switch their marketplace URL
+  to the template's.
+- **Taking an update:** `git fetch upstream --tags && git merge agent-kit--v<version>`,
+  run the release gate above, then `git push origin main --tags`. The upstream tags
+  come along, so `ref` pins keep working.
 
 If a second plugin ever joins, move each one into its own directory and point its
 `marketplace.json` entry there (`"source": "./<plugin>"`) — the catalog keeps its name,
