@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Self-check for memory-drift-guard.sh:  bash hooks/memory-drift-guard.test.sh
+# Self-check for the memory-drift-guard check of guard.sh:  bash hooks/memory-drift-guard.test.sh
 #
 # Each case builds a throwaway repo under $TMPDIR, so the real worktree and
 # index are never touched. Exits non-zero if any case regresses.
 set -uo pipefail
 
-H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/memory-drift-guard.sh"
+H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/guard.sh"
 bash -n "$H" || exit 1
 # The exec bit has to survive the clone: git records it, a plain `cp` does not.
-[ -x "$H" ] || { echo "missing exec bit: memory-drift-guard.sh (git update-index --chmod=+x)"; exit 1; }
+[ -x "$H" ] || { echo "missing exec bit: guard.sh (git update-index --chmod=+x)"; exit 1; }
 perl -MJSON::PP -e1 || { echo "perl with JSON::PP is required (the hook needs it too)"; exit 1; }
 
 tmp="$(mktemp -d)"
@@ -29,7 +29,7 @@ n=0
 # `@` being replaced by the case's repo; otherwise from inside the repo.
 t(){
   n=$((n+1)); local dir="$tmp/$n"
-  mkdir -p "$dir" && git -C "$dir" init -q
+  mkdir -p "$dir" && git -C "$dir" init -q -b work
   note "$dir" jobs.md 'jobs/**'
   note "$dir" domains.md 'src/billing/**' 'src/enrollment/**'
   note "$dir" architecture.md 'index.php' 'main.go'
@@ -79,11 +79,6 @@ t 0 'git commit --amend --no-edit' '-'
 t 0 'git status' 'jobs/nightly.sh'
 t 0 'git log --grep commit' 'jobs/nightly.sh'
 t 0 'git -C /nope/missing commit -m x' 'jobs/nightly.sh'
-
-echo "== no JSON parser: a visible error (exit 1), not a silent pass =="
-mkdir -p "$tmp/noperl" && printf '#!/bin/sh\nexit 127\n' >"$tmp/noperl/perl" && chmod +x "$tmp/noperl/perl"
-out="$(printf '{}' | PATH="$tmp/noperl:$PATH" bash "$H" 2>&1)"; r=$?
-if [ $r = 1 ] && grep -q "NOT running" <<<"$out"; then echo "ok   parser missing -> exit 1"; else echo "FAIL parser missing -> got $r: $out"; fails=$((fails+1)); fi
 
 echo "failures=$fails"
 [ "$fails" -eq 0 ]

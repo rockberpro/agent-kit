@@ -17,8 +17,8 @@ No `.agents/` at all → this is not an update: run `/agent-kit:scaffold` instea
    creates what is missing (symlinks, `AGENTS.md` sections, the language line, the
    anti-drift rule) and touches nothing that exists. Settle the language here — every
    later pass reads it from `AGENTS.md`.
-2. **Hooks — `/agent-kit:update-hooks`.** Guards and `settings.json`; outdated copies are
-   replaced only after their diff is shown.
+2. **Hooks — `/agent-kit:update-hooks`.** `settings.json` against the template; guard copies
+   left by older versions are removed only after a yes.
 3. **Memory — `/agent-kit:update-memory`.** Before rules: rules point at notes, and the
    rule candidates come from what the notes say now.
 4. **Rules — `/agent-kit:update-rules`.** Last, over the notes as they are after step 3.
@@ -28,6 +28,6 @@ A pass with nothing to do reports "nothing to do" in one line and the next one s
 ## Report
 
 One section per pass: created, updated, left on purpose (and why), what still needs the
-user (legacy entries, linked hooks, rewrites declined). Then the follow-ups the passes
+user (old marketplace entries, linked hooks, rewrites declined). Then the follow-ups the passes
 listed — `/agent-kit:memory <area>`, `/agent-kit:rules <area>` — as one list. Everything
 changed is staged by name; committing follows the project's `rules/commit.md`.

@@ -1,6 +1,6 @@
 {
   "name": "agent-kit",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Guards (master, secrets, memory drift) + .agents scaffold + memory/rules mapping skills + explorer agent. Works for any project.",
   "author": {
     "name": "Samuel Oberger Rockenbach",

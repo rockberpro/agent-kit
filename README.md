@@ -39,10 +39,9 @@ and in the session:
 ```
 
 The skill sets up `.agents/` (`memory/`, `rules/`, `settings.json`, `.claude` symlink),
-the root `AGENTS.md` with `CLAUDE.md` pointing at it, copies the three guards into
-`.agents/hooks/` and writes the anti-drift rule `.agents/rules/memory.md`. It is
-idempotent: run again on an already initialized project and it
-only creates what is missing, never overwriting content.
+the root `AGENTS.md` with `CLAUDE.md` pointing at it, and writes the anti-drift rule
+`.agents/rules/memory.md`. It is idempotent: run again on an already initialized
+project and it only creates what is missing, never overwriting content.
 
 The structure starts empty on purpose. Two skills fill it, each one asking before it
 writes:
@@ -56,7 +55,8 @@ Without an argument they do the full pass (for `memory`, the bootstrap phases, s
 at a minimum usable catalog); with an area — a module, a directory, a subject — they map
 only that one, which is how the catalog grows afterwards: by the tasks that touch it.
 
-The `settings.json` it writes declares the marketplace for the team:
+The `settings.json` it writes declares the marketplace for the team, which is what
+turns the guards on in every clone:
 
 ```json
 {
@@ -78,16 +78,14 @@ Nothing is re-created and nothing is replaced without a diff and a yes:
 
 ```
 /agent-kit:update-all      # the four passes below, in order, one report
-/agent-kit:update-hooks    # guard copies + settings.json against the installed plugin
+/agent-kit:update-hooks    # settings.json against the template, drops old guard copies
 /agent-kit:update-memory   # index, globs, notes whose area changed since they were touched
 /agent-kit:update-rules    # mandatory rules, dead globs, duplicates, new candidates
 ```
 
 `update-all` runs the `scaffold` first (idempotent: it only adds the missing structure),
-then hooks → memory → rules — rules last, because they point at notes. A hook copy that is
-a symlink into another package is reported and never written through. Settings still
-carrying the old marketplace name `univates.br` are migrated to `agent-kit@agent-kit`;
-whatever else uses the old name is left for the user.
+then hooks → memory → rules — rules last, because they point at notes. Guard copies that
+older versions put in `.agents/hooks/` are removed on a yes: the plugin runs the guards now.
 
 ## Uninstall
 
@@ -98,19 +96,21 @@ claude plugin marketplace remove agent-kit
 
 ## What is inside
 
-- **hook `master-guard`** — on `master`/`main`, blocks anything that writes a commit
+All three guards are checks in one hook, `hooks/guard.sh`, run before every Bash call.
+
+- **guard `master-guard`** — on `master`/`main`, blocks anything that writes a commit
   there (`commit`, `cherry-pick`, `revert`, `am`, `rebase`), plus `git merge`,
   `git reset --hard` and any `push` that targets the protected branch. `--abort` /
   `--continue` on a stuck sequencer still go through. Fails open: any internal error
   exits 0, never wedging the session. Test:
   `bash hooks/master-guard.test.sh`.
-- **hook `secret-guard`** — blocks a `git commit` whose content looks like a secret:
+- **guard `secret-guard`** — blocks a `git commit` whose content looks like a secret:
   a private-key header, a well-known token format (AWS/GitHub/Slack/GCP), or a `.env`
   or keystore (`.p12`/`.pfx`/`.jks`) being added. It only checks added lines, so a
   secret already in history does not block new commits — keystores are matched by name
   instead, since a binary diff has no lines to scan. Also fails open. Test:
   `bash hooks/secret-guard.test.sh`.
-- **hook `memory-drift-guard`** — blocks a `git commit` that touches code covered by a
+- **guard `memory-drift-guard`** — blocks a `git commit` that touches code covered by a
   memory note (declared in the note's `paths:` frontmatter) when the note is not in the
   same commit, so it is reviewed while the diff is fresh. `SKIP_MEMORY_CHECK=1` in front
   of the command when the note still holds. A note without `paths:` is never demanded.
@@ -120,7 +120,7 @@ claude plugin marketplace remove agent-kit
   wrong, stage it with the code. Whichever of `scaffold`, `memory` or `rules` meets a
   `.agents/memory/` without `.agents/rules/memory.md` copies it there, translated into
   the project's language; none overwrites an existing one.
-- **skill `/agent-kit:scaffold`** — sets up `.agents/` (memory, rules, settings, guards,
+- **skill `/agent-kit:scaffold`** — sets up `.agents/` (memory, rules, settings,
   `.claude` symlink) in a repository that does not have it yet.
 - **skill `/agent-kit:memory [area]`** — the mapping procedure: cheap reconnaissance,
   non-negotiables into `AGENTS.md`, architecture, module map, business domain, then the
@@ -135,9 +135,6 @@ claude plugin marketplace remove agent-kit
   `update-memory` skills fan out to it.
 - **skills `/agent-kit:update-{all,hooks,memory,rules}`** — review an existing harness;
   see *Update a project* above.
-- **script `scripts/sync-hooks.sh`** — the engine behind `scaffold` step 3 and
-  `update-hooks`: report by default, `--apply` creates what is missing, `--force` also
-  replaces outdated guard copies. Test: `bash scripts/sync-hooks.test.sh`.
 
 ## Publish
 
@@ -164,7 +161,7 @@ flow:
 # 1. change the code
 # 2. bump version in plugin.json (semver)
 claude plugin validate . --strict && claude plugin validate .claude-plugin/plugin.json --strict
-for t in hooks/*.test.sh scripts/*.test.sh; do bash "$t" || break; done
+for t in hooks/*.test.sh; do bash "$t" || break; done
 git commit -am "feat(agent-kit): <what changed>"
 claude plugin tag agent-kit          # creates agent-kit--v0.9.0, checking that plugin.json
                                 # and the marketplace.json entry agree
@@ -173,7 +170,7 @@ git push --follow-tags
 
 There is no CI in this repository on purpose — the kit does not assume a forge. The
 validate + self-check line above is the gate: skip it and a broken guard reaches every
-project on the next `marketplace update`. The guards, `sync-hooks.sh` and the self-checks need only `bash`, `git` and `perl`
+project on the next `marketplace update`. The guards and the self-checks need only `bash`, `git` and `perl`
 (with its core `JSON::PP`), which Git for Windows bundles and every Linux git pulls in.
 
 In the projects: `/plugin marketplace update` and restart the session.
