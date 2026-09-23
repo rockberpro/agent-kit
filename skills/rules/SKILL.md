@@ -120,6 +120,33 @@ Then write it as imperative bullets. Always include, whatever the answers:
 If the answers carry a *why* worth keeping (a past incident, a team agreement), that goes
 in `.agents/memory/commit.md`, and the rule points at it.
 
+## Domain rules — mandatory for every `domain-*.md` note
+
+When memory splits the system into business domains, each `domain-<name>.md` note gets
+`rules/domain-<name>.md`, same name. It is how reading the note stops being optional: the
+harness injects it the moment the agent reads any file of the domain. No policy in it,
+so no question to ask beyond listing it with the others.
+
+- **Globs cover the whole domain**, including modules that have their own notes (the
+  note's `paths:` may be narrower; the rule's may not).
+- **First line orders the read**, before anything else:
+
+  ```markdown
+  ---
+  paths:
+    - "src/billing/**"
+  ---
+
+  # Billing domain
+
+  - Before reading further or changing anything here, read
+    `.agents/memory/domain-billing.md` — and `domains.md` if the task crosses into
+    another domain.
+  - <the domain's prohibitions and mandatory steps, if any>
+  ```
+
+The rest follows the path-scoped rules below.
+
 ## Path-scoped rules
 
 For each candidate area:

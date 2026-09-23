@@ -195,6 +195,23 @@ agent knows where to change and not what it is changing.
   X happened in 2014". No amount of reading recovers that, and it is exactly what causes
   rework when the agent assumes wrong. List the questions and ask them in one go.
 
+**More than one business domain** (billing, inventory, HR... — each with its own
+vocabulary, owners and rules, usually its own directories or tables): split.
+
+- `domains.md` becomes the **map**: one line per domain, the boundaries between them,
+  the entities and events that cross a boundary, and who owns each hand-off.
+- One `domain-<name>.md` per domain: its life cycle, glossary, profiles and the rules
+  only it obeys. Its `paths:` declare the domain's code, so drift is caught at commit.
+- Every domain note gets a **domain rule** of the same name (`rules/domain-<name>.md`)
+  whose globs cover the whole domain and whose first line orders reading the note —
+  that is what makes the agent read it when it navigates into the domain, not only
+  when it edits. Hand them to `/agent-kit:rules`; they are mandatory, not candidates.
+- A module inside a domain stays a section of the domain note until it outgrows one
+  read; then it gets its own `module-*.md` with the narrower glob, and the domain
+  note's `paths:` drop it (notes must not overlap). The domain rule keeps covering it.
+
+One domain → keep the single `domains.md`, no domain rules.
+
 ## Phase 5 — Deepen module by module, on demand
 
 **Do not write twelve deep notes at once.** The return drops fast, and what you wrote
@@ -224,6 +241,9 @@ links to its neighbours. Start with the [architecture](architecture.md).
 - [Business domains](domains.md) — <hook>
 - [Conventions and non-negotiables](conventions.md) — <hook>
 - [Overall architecture](architecture.md) — <hook>
+
+### Business domains (when there is more than one)
+- [...](domain-....md) — <hook>
 
 ### Business modules
 - [...](module-....md) — <hook>
@@ -283,8 +303,8 @@ knowledge.
 ## Report
 
 At the end: notes created/extended, what went into `AGENTS.md`, the open questions still
-unanswered, and the **rule candidates** (area + one line each) — offer
-`/agent-kit:rules` for them.
+unanswered, the **domain rules** owed (one per `domain-*.md`, with its globs), and the
+**rule candidates** (area + one line each) — offer `/agent-kit:rules` for them.
 
 ## Maintenance
 
