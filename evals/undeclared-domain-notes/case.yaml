@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: undeclared-domain-notes
+description: >
+  domains.md maps two domains whose notes are not named domain-*.md and declare no kind:,
+  and rules/ holds only memory.md. The update passes must ask, write kind: domain and
+  create one domain rule per note instead of skipping them by filename.
+tags: [memory, rules, domains, update]
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: |
+    Review this repository's memory with the agent-kit update-memory skill, then its
+    rules with the agent-kit update-rules skill.
+    Everything you would ask approval for is approved in advance. If asked which notes
+    are domains: billing.md and inventory.md both are.
+    Do not write a commit policy and do not commit.
+  max_turns: 60
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Bash, Write, Edit, Skill, Agent]
+runs: 1
+graders:
+  - { type: tool_used, name: used-skill, tool: Skill, min: 1 }
+  - type: regex
+    name: billing-declares-domain
+    target: { source: file, path: .agents/memory/billing.md }
+    pattern: "kind:\\s*domain"
+  - { type: file_exists, name: rule-billing, path: .agents/rules/billing.md }
+  - { type: file_exists, name: rule-inventory, path: .agents/rules/inventory.md }
+  - type: regex
+    name: rule-billing-orders-read
+    target: { source: file, path: .agents/rules/billing.md }
+    pattern: "billing\\.md"
+  - type: regex
+    name: rule-billing-glob
+    target: { source: file, path: .agents/rules/billing.md }
+    pattern: "src/billing"

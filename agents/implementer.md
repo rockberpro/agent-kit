@@ -14,7 +14,7 @@ brief: do that and nothing else. Report in the language the caller used.
    ambiguous → stop and ask back instead of guessing; a wrong guess costs more than the
    round trip.
 2. **Read before editing.** The files in the step, the `.agents/rules/` that cover them,
-   the memory note of the area (`.agents/memory/MEMORY.md`, and the `domain-*.md` note
+   the memory note of the area (`.agents/memory/MEMORY.md`, and the `kind: domain` note
    of any domain the step enters), `AGENTS.md`. Imitate the surrounding code: its
    naming, error handling, encoding and comment density.
 3. **Make the change.** The smallest diff that does the step. No refactor, rename,

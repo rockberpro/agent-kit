@@ -30,7 +30,7 @@ dependencies, dependents, and where a regression would go unnoticed.
    reading — if you cannot, that is already the first open question. In impact mode,
    confirm the exact file/symbol/table.
 2. **Memory first.** Read `.agents/memory/MEMORY.md` and follow only the links relevant
-   to the task's domain — the `domain-*.md` note of every domain the task crosses is
+   to the task's domain — the domain note (`kind: domain`) of every domain the task crosses is
    not optional, nor is `domains.md` when it crosses more than one. Do not read the
    whole catalog. Memory usually explains *why* the
    code is the way it is — that saves hours of reading. **If there is no catalog yet**,

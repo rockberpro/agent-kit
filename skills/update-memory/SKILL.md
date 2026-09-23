@@ -63,10 +63,16 @@ Run all of them, then report once. Each finding: note, what is wrong, proposed f
    (`module-*`, a jobs/integration note) but has no frontmatter is invisible to the
    guard. Propose the globs.
 
-6. **Language.** A note, heading or index line not in the declared language → list it
+6. **Domain declaration.** The domain rules follow `kind: domain` in a note's
+   frontmatter, not its filename. A `domain-*.md` without it → add `kind: domain`
+   (the name already said so; no need to ask). Notes that `domains.md` links to as
+   domains with no `kind:` → list them and ask which are domains; write `kind: domain`
+   or `kind: module` on the answer, so the question is not asked again. Nothing to ask when `domains.md` maps a single domain.
+
+7. **Language.** A note, heading or index line not in the declared language → list it
    and offer to translate (it is a rewrite). Glossary *terms* stay as the code names them.
 
-7. **Gaps.** Foundation notes the index promises but that do not exist, or an area with
+8. **Gaps.** Foundation notes the index promises but that do not exist, or an area with
    heavy recent activity (`git log --since=6.months --name-only`) and no note → do not
    write them here: list them and offer `/agent-kit:memory <area>`.
 

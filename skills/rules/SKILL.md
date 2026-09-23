@@ -140,12 +140,19 @@ stage it with the rule.
 If the answers carry a *why* worth keeping (a past incident, a team agreement), that goes
 in `.agents/memory/commit.md`, and the rule points at it.
 
-## Domain rules — mandatory for every `domain-*.md` note
+## Domain rules — mandatory for every `kind: domain` note
 
-When memory splits the system into domains (business or technical), each
-`domain-<name>.md` note gets `rules/domain-<name>.md`, same name. It is how reading the
-note stops being optional: the harness injects it the moment the agent reads any file of
-the domain. No policy in it, so no question to ask beyond listing it with the others.
+When memory splits the system into domains (business or technical), each note whose
+frontmatter says `kind: domain` gets a rule of the same name in `rules/`
+(`domain-billing.md` → `rules/domain-billing.md`). The declaration decides, never the
+filename. It is how
+reading the note stops being optional: the harness injects it the moment the agent reads
+any file of the domain. No policy in it, so no question to ask beyond listing it with
+the others.
+
+`domains.md` maps several domains but no note declares `kind: domain` → do not skip in
+silence: list the notes it links to and ask which are domains, then write the `kind:`
+line into each (`domain` or `module`) before writing the rules.
 
 - **Globs cover the whole domain**, including modules that have their own notes (the
   note's `paths:` may be narrower; the rule's may not).

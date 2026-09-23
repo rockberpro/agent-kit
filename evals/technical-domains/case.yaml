@@ -32,6 +32,10 @@ graders:
     name: rule-delivery-orders-read
     target: { source: file, path: .agents/rules/domain-delivery.md }
     pattern: "domain-delivery\\.md"
+  - type: regex
+    name: note-declares-domain
+    target: { source: file, path: .agents/memory/domain-delivery.md }
+    pattern: "kind:\\s*domain"
   - type: llm
     name: invariants-not-business
     focus: files

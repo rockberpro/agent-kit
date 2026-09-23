@@ -34,6 +34,10 @@ graders:
     name: rule-billing-glob
     target: { source: file, path: .agents/rules/domain-billing.md }
     pattern: "src/billing"
+  - type: regex
+    name: note-declares-domain
+    target: { source: file, path: .agents/memory/domain-billing.md }
+    pattern: "kind:\\s*domain"
   - type: llm
     name: knowledge-captured
     focus: files
