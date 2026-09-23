@@ -173,7 +173,8 @@ git push --follow-tags
 
 There is no CI in this repository on purpose — the kit does not assume a forge. The
 validate + self-check line above is the gate: skip it and a broken guard reaches every
-project on the next `marketplace update`. The self-checks need `bash`, `git` and `jq`.
+project on the next `marketplace update`. The guards, `sync-hooks.sh` and the self-checks need only `bash`, `git` and `perl`
+(with its core `JSON::PP`), which Git for Windows bundles and every Linux git pulls in.
 
 In the projects: `/plugin marketplace update` and restart the session.
 
