@@ -1,6 +1,6 @@
 ---
 name: update-hooks
-description: Reviews an existing harness's .agents/settings.json against this plugin - marketplace, enabled plugin, deny list, includeCoAuthoredBy - and removes guard copies left in .agents/hooks/ by older versions, asking before removing anything. Use when the user asks to update, check or repair the hooks/guards or settings of a project that already has .agents/, after upgrading agent-kit, or as part of update-all.
+description: Reviews an existing harness's .agents/settings.json against this plugin - marketplace, enabled plugin, deny list, attribution - and removes guard copies left in .agents/hooks/ by older versions, asking before removing anything. Use when the user asks to update, check or repair the hooks/guards or settings of a project that already has .agents/, after upgrading agent-kit, or as part of update-all.
 ---
 
 # update-hooks
@@ -18,10 +18,12 @@ Language: nothing here writes prose, only JSON keys.
 2. **`settings.json`** against `${CLAUDE_PLUGIN_ROOT}/templates/settings.json`:
    - missing → copy the template.
    - present → add only what it lacks: the `agent-kit` marketplace, `agent-kit@agent-kit`
-     in `enabledPlugins`, each `deny` entry, `"includeCoAuthoredBy": false`. Everything
-     else stays. Not valid JSON → report it and stop; do not hand-edit around it.
-   - `includeCoAuthoredBy` set to `true`, or an `attribution` key (it takes precedence)
-     → commits get agent attribution again: report it, change it only on a yes.
+     in `enabledPlugins`, each `deny` entry, `"attribution": { "commit": "", "pr": "" }`.
+     Everything else stays. Not valid JSON → report it and stop; do not hand-edit around it.
+   - `includeCoAuthoredBy` present → it is deprecated: propose replacing it with the
+     `attribution` block above, change it only on a yes.
+   - `attribution.commit` or `attribution.pr` not empty → commits or PRs get agent
+     attribution again: report it, change it only on a yes.
    - the old marketplace name `univates.br` (`agent-kit@univates.br`, an
      `extraKnownMarketplaces.univates.br` key) → tell the user; remove only what they
      confirm nothing else uses.

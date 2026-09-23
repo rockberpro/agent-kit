@@ -1,9 +1,10 @@
 {
   "name": "agent-kit",
   "version": "0.10.0",
+  "license": "MIT",
   "description": "Guards (master, secrets, memory drift) + .agents scaffold + memory/rules mapping skills + explorer agent. Works for any project.",
   "author": {
-    "name": "Samuel Oberger Rockenbach",
-    "email": "samuel.rockenbach@univates.br"
+    "name": "Rockberpro",
+    "email": "rockberpro@gmail.com"
   }
 }

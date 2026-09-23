@@ -2,8 +2,8 @@
   "name": "agent-kit",
   "description": "Agent harness for new projects: guards, .agents scaffold, memory and rules mapping skills.",
   "owner": {
-    "name": "Samuel Oberger Rockenbach",
-    "email": "samuel.rockenbach@univates.br"
+    "name": "Rockberpro",
+    "email": "rockberpro@gmail.com"
   },
   "plugins": [
     {
