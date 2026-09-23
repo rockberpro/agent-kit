@@ -117,6 +117,10 @@ Then write it as imperative bullets. Always include, whatever the answers:
 - close with: `master-guard`, `secret-guard` and the `deny` in `settings.json` are the
   net for mistakes, not the rule.
 
+The co-author bullet overlaps `"includeCoAuthoredBy": false` in `settings.json` on
+purpose: the setting enforces it for Claude Code only, the bullet reaches any other
+agent that reads `.agents/`. Keep both.
+
 If the answers carry a *why* worth keeping (a past incident, a team agreement), that goes
 in `.agents/memory/commit.md`, and the rule points at it.
 

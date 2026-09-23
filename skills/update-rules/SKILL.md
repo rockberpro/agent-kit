@@ -39,7 +39,8 @@ Run all of them, then report once.
      Present → check it against the last few hundred `git log --format=%s` subjects; a
      rule the history contradicts is a question for the user, not a silent fix. Missing
      one of the bullets the `rules` skill always includes (e.g. never co-author a commit)
-     → propose adding it, translated.
+     → propose adding it, translated. The co-author bullet is not a duplicate of
+     `includeCoAuthoredBy` in `settings.json`: that setting binds Claude Code only.
    - Every `.agents/memory/domain-*.md` has `rules/domain-*.md` of the same name, whose
      first line orders reading that note and whose globs cover the whole domain. Missing
      or without that line → write it the way the `rules` skill does (no policy in it).
