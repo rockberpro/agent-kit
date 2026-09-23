@@ -18,7 +18,7 @@ code around it. Report in the language the caller used.
 2. **Load what governs it.** `AGENTS.md`; every rule in `.agents/rules/` whose `paths:`
    glob matches a changed file, plus the ones without `paths:`; every memory note whose
    `paths:` covers a changed file, following `.agents/memory/MEMORY.md`. The
-   `domain-*.md` note of every domain the diff crosses is not optional.
+   domain note (`kind: domain`) of every domain the diff crosses is not optional.
 3. **Check the diff against them.**
    - a rule or `AGENTS.md` non-negotiable the change breaks;
    - a business rule or invariant a note records that the change contradicts;

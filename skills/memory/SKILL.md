@@ -210,7 +210,11 @@ each with its own vocabulary and rules, usually its own directories or tables): 
 - One `domain-<name>.md` per domain: its vocabulary, flows and what only it obeys —
   business rules where there are any, technical invariants where there are not. Its
   `paths:` declare the domain's code, so drift is caught at commit.
-- Every domain note gets a **domain rule** of the same name (`rules/domain-<name>.md`)
+- **A domain note declares itself** with `kind: domain` in its frontmatter. That line,
+  not the filename, is what the other skills look for, so a catalog whose notes are
+  named otherwise still gets its domain rules. A note `domains.md` links to that is not
+  a domain (a module inside one) says `kind: module`, so nobody asks again.
+- Every domain note gets a **domain rule** of the same name (`rules/<note>.md`)
   whose globs cover the whole domain and whose first line orders reading the note —
   that is what makes the agent read it when it navigates into the domain, not only
   when it edits. Hand them to `/agent-kit:rules`; they are mandatory, not candidates.
@@ -274,6 +278,8 @@ Note format:
   touches the area without bringing the note along. One glob per line — the guard does
   not expand `{a,b}`. Globs of different notes should not overlap, or one file demands
   two notes. A conceptual note, with no area of its own, has no frontmatter.
+- A domain note also says `kind: domain` there (a module note inside a domain,
+  `kind: module`) — see the domains phase. It goes in even when the note has no `paths:`.
 
   ```markdown
   ---
@@ -311,7 +317,7 @@ knowledge.
 ## Report
 
 At the end: notes created/extended, what went into `AGENTS.md`, the open questions still
-unanswered, the **domain rules** owed (one per `domain-*.md`, with its globs), and the
+unanswered, the **domain rules** owed (one per `kind: domain` note, with its globs), and the
 **rule candidates** (area + one line each) — offer `/agent-kit:rules` for them.
 
 ## Maintenance

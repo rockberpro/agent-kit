@@ -9,8 +9,9 @@ Review, not creation: `rules/` exists and this pass finds where it stopped match
 repository. Checking is reading — do not ask to read. **Ask before writing**, with the
 list of findings and the fix proposed for each; deleting a rule always needs a yes.
 
-No `.agents/rules/` or only `memory.md` in it → that is `/agent-kit:rules` (first pass).
-Say so and stop.
+No `.agents/rules/` or only `memory.md` in it → the policy and the path-scoped rules
+are `/agent-kit:rules` (first pass). Still run the domain-rule bullet of check 1 here —
+it carries no policy — then offer `/agent-kit:rules` and stop.
 
 ## Language
 
@@ -47,10 +48,13 @@ Run all of them, then report once.
      `commit.md` and the matching `attribution` in `settings.json`. An old "never
      co-author" bullet a previous version added unasked → confirm it is still wanted.
      The bullet is not a duplicate of `attribution`: that setting binds Claude Code only.
-   - Every `.agents/memory/domain-*.md` has `rules/domain-*.md` of the same name, whose
-     first line orders reading that note and whose globs cover the whole domain. Missing
-     or without that line → write it the way the `rules` skill does (no policy in it).
-     A domain rule whose note is gone → propose deleting it.
+   - Every note with `kind: domain` in its frontmatter has a rule of the same name in
+     `rules/`, whose first line orders reading that note and whose globs cover the whole
+     domain. Missing or without that line → write it the way the `rules` skill does (no
+     policy in it). A domain rule whose note is gone, or no longer says `kind: domain`,
+     → propose deleting it. No note declares `kind:` while `domains.md` maps several
+     domains → say so out loud and send it to `update-memory`; never guess from
+     filenames.
 
 2. **Globs.** For each rule with `paths:`, how many files each glob matches:
 
