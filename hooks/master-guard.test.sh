@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Self-check for master-guard.sh:  bash hooks/master-guard.test.sh
+# Self-check for the master-guard check of guard.sh:  bash hooks/master-guard.test.sh
 #
 # Runs every case inside throwaway repos under $TMPDIR, so it never switches
 # branches or touches the real worktree. Exits non-zero if any case regresses.
 set -uo pipefail
 
-H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/master-guard.sh"
+H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/guard.sh"
 bash -n "$H" || exit 1
 # The exec bit has to survive the clone: git records it, a plain `cp` does not.
-[ -x "$(dirname "$H")/master-guard.sh" ] || { echo "missing exec bit: master-guard.sh (git update-index --chmod=+x)"; exit 1; }
+[ -x "$H" ] || { echo "missing exec bit: guard.sh (git update-index --chmod=+x)"; exit 1; }
 perl -MJSON::PP -e1 || { echo "perl with JSON::PP is required (the hook needs it too)"; exit 1; }
 
 tmp="$(mktemp -d)"

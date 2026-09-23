@@ -1,6 +1,6 @@
 ---
 name: scaffold
-description: Creates the .agents/ structure (memory, rules, settings, guards, .claude symlink) in a project that does not have it yet, then hands off to the memory and rules skills. Use when the user asks to initialize/configure the agents directory, the memory base or the .agents of a new repository.
+description: Creates the .agents/ structure (memory, rules, settings, .claude symlink) in a project that does not have it yet, then hands off to the memory and rules skills. Use when the user asks to initialize/configure the agents directory, the memory base or the .agents of a new repository.
 ---
 
 # scaffold
@@ -37,10 +37,10 @@ the root: the instructions file is `AGENTS.md` and `CLAUDE.md` is a symlink to i
 .agents/
   memory/            → note graph, one note per domain, MEMORY.md index (memory skill)
   rules/             → path-scoped instructions the harness injects (rules skill)
-  settings.json      → permissions + team marketplace + repo hooks
+  settings.json      → permissions + team marketplace (enables the guards)
   agents/            → project subagents (optional)
   skills/            → project skills (optional)
-  hooks/             → this repository's hooks (the guards go here)
+  hooks/             → this repository's own hooks (optional)
   .gitignore
 .claude -> .agents
 AGENTS.md
@@ -57,8 +57,7 @@ CLAUDE.md -> AGENTS.md
    ```bash
    cd "$(git rev-parse --show-toplevel)"
    ls -ld .agents .claude AGENTS.md CLAUDE.md .agents/settings.json .agents/rules \
-          .agents/rules/memory.md .agents/hooks/{master,secret,memory-drift}-guard.sh \
-          .agents/memory/MEMORY.md 2>&1
+          .agents/rules/memory.md .agents/memory/MEMORY.md 2>&1
    ```
 
    Two exceptions where you *do* adjust what exists, because it is structure and not
@@ -66,13 +65,13 @@ CLAUDE.md -> AGENTS.md
 
    - `CLAUDE.md` is a regular file and `AGENTS.md` does not exist → rename it
      (`git mv CLAUDE.md AGENTS.md`) and create the symlink. Content is preserved.
-   - `.agents/settings.json` exists but is missing a guard in the `hooks` block, a
-     `deny` entry or the plugin → step 3 adds what is missing, preserving the rest.
+   - `.agents/settings.json` exists but is missing a `deny` entry or the plugin → step 3
+     adds what is missing, preserving the rest.
 
 2. Create whatever structure is missing:
 
    ```bash
-   mkdir -p .agents/memory .agents/rules .agents/hooks
+   mkdir -p .agents/memory .agents/rules
    [ -e .agents/.gitignore ] || printf 'settings.local.json\n.obsidian\n' > .agents/.gitignore
    # A dangling symlink is invisible to -e but still occupies the name, so ln fails.
    if [ -L .claude ] && [ ! -e .claude ]; then rm .claude; fi
@@ -88,28 +87,21 @@ CLAUDE.md -> AGENTS.md
 
    Freshly copied, translate it into the project's language (keep the filename).
 
-3. **Guards and `.agents/settings.json`** — one script does both, the same one
-   `/agent-kit:update-hooks` uses, so there is a single copy of the settings template:
+3. **`.agents/settings.json`** — enables the plugin for whoever clones and denies blind
+   `git add`:
 
    ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/sync-hooks.sh" --apply
-   git add .agents/settings.json .agents/hooks/{master,secret,memory-drift}-guard.sh   # exec bit goes into git
+   [ -e .agents/settings.json ] || cp "${CLAUDE_PLUGIN_ROOT}/templates/settings.json" .agents/settings.json
    ```
 
-   `--apply` only creates: the three guard copies (`master-guard`, `secret-guard`,
-   `memory-drift-guard`) that are missing, a `settings.json` from the template when there
-   is none, and — in an existing one — only the missing pieces: the marketplace and
-   `agent-kit@agent-kit`, the `deny` entries for blind `git add`, the guard registrations.
-   Everything else in it stays. A copy that differs from the plugin's is reported
-   `outdated` and left alone — replacing it is `/agent-kit:update-hooks`, which shows the
-   diff first. A symlinked copy is reported `linked` and never written through. Exit 1
-   only means such lines are left; exit 2 (invalid `settings.json`) stops the scaffold —
-   report it, do not hand-edit around it.
+   An existing one gets only what it lacks from the template — the `agent-kit`
+   marketplace, `agent-kit@agent-kit` in `enabledPlugins`, each `deny` entry — and
+   everything else in it stays. Not valid JSON → report it and stop; do not hand-edit
+   around it.
 
-   The copies make the guards work in a clone with no marketplace, no trust prompt and no
-   session restart; whoever clones is still offered the plugin when trusting the folder.
-   If the plugin is also enabled, each guard runs twice — harmless, both block the same
-   thing. The `deny` list stops a stray `.env` or real config from being staged at all;
+   The guards (`master-guard`, `secret-guard`, `memory-drift-guard`) run from the plugin,
+   so they act wherever it is enabled; whoever clones is offered it when trusting the
+   folder. The `deny` list stops a stray `.env` or real config from being staged at all;
    `secret-guard` is the net behind it.
 
 4. **`AGENTS.md` at the root, with `CLAUDE.md` as a symlink to it.** The real file is
@@ -140,9 +132,8 @@ CLAUDE.md -> AGENTS.md
    for a Portuguese project: `Notas e regras em .agents/ são escritas em português
    (pt-BR).`
 
-5. Report what you created (created vs. already existed, plus any `outdated`, `linked`
-   or `legacy` line the script printed — those are `/agent-kit:update-hooks`), and say
-   the plugin only activates after `/plugin marketplace update` + a session restart.
+5. Report what you created (created vs. already existed), and say the plugin only
+   activates after `/plugin marketplace update` + a session restart.
 
 6. **Hand off to the mapping skills.** The structure is empty until they run; both
    read a lot and ask before writing, so offer them instead of starting unasked:

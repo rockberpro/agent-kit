@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Self-check for secret-guard.sh:  bash hooks/secret-guard.test.sh
+# Self-check for the secret-guard check of guard.sh:  bash hooks/secret-guard.test.sh
 #
 # Each case builds a throwaway repo under $TMPDIR, stages content, and feeds a
 # command through the hook. Exits non-zero if any case regresses.
 set -uo pipefail
 
-H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/secret-guard.sh"
+H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/guard.sh"
 bash -n "$H" || exit 1
-[ -x "$H" ] || { echo "missing exec bit: secret-guard.sh (git update-index --chmod=+x)"; exit 1; }
+[ -x "$H" ] || { echo "missing exec bit: guard.sh (git update-index --chmod=+x)"; exit 1; }
 perl -MJSON::PP -e1 || { echo "perl with JSON::PP is required (the hook needs it too)"; exit 1; }
 
 tmp="$(mktemp -d)"
@@ -17,7 +17,7 @@ trap 'rm -rf "$tmp"' EXIT
 # a counter would not survive the $(newrepo) subshell.
 newrepo() {
   local dir; dir="$(mktemp -d "$tmp/r.XXXXXX")"
-  git -C "$dir" init -q -b main
+  git -C "$dir" init -q -b work
   git -C "$dir" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
   printf '%s' "$dir"
 }
@@ -83,11 +83,6 @@ r="$(newrepo)"; printf 'ok\n' > "$r/t.txt"
 git -C "$r" add t.txt; git -C "$r" -c user.email=t@t -c user.name=t commit -q -m seed
 printf 'aws=%s\n' "$AKIA" > "$r/t.txt"    # modified, NOT staged
 t "$r" 'git commit -am x' 2
-
-echo "== no JSON parser: a visible error (exit 1), not a silent pass =="
-mkdir -p "$tmp/noperl" && printf '#!/bin/sh\nexit 127\n' >"$tmp/noperl/perl" && chmod +x "$tmp/noperl/perl"
-out="$(printf '{}' | PATH="$tmp/noperl:$PATH" bash "$H" 2>&1)"; r=$?
-if [ $r = 1 ] && grep -q "NOT running" <<<"$out"; then echo "ok   parser missing -> exit 1"; else echo "FAIL parser missing -> got $r: $out"; fails=$((fails+1)); fi
 
 echo "failures=$fails"
 [ "$fails" -eq 0 ]

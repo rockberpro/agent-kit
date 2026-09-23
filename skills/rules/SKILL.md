@@ -103,7 +103,6 @@ propose defaults that match the history:
 - May the agent run `git commit` on its own, or only stage and hand over the message?
 - Message format: language, one line or subject + body, prefix/scope convention, ticket
   reference?
-- Co-authorship trailers (`Co-Authored-By:`) — wanted or never?
 - May the agent push? (Default: never.)
 
 Then write it as imperative bullets. Always include, whatever the answers:
@@ -113,6 +112,8 @@ Then write it as imperative bullets. Always include, whatever the answers:
   showing up means stop and flag it;
 - on the main branch, create a branch before any commit;
 - do not skip hooks or signing (`--no-verify`, `--no-gpg-sign`) unless asked;
+- never co-author a commit: no `Co-Authored-By:` trailer or any other agent attribution
+  in the message — the commit is the user's;
 - close with: `master-guard`, `secret-guard` and the `deny` in `settings.json` are the
   net for mistakes, not the rule.
 

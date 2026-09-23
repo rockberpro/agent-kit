@@ -37,7 +37,9 @@ Run all of them, then report once.
      own additions stay.
    - `rules/commit.md` missing → it is policy: offer `/agent-kit:rules`, which asks for it.
      Present → check it against the last few hundred `git log --format=%s` subjects; a
-     rule the history contradicts is a question for the user, not a silent fix.
+     rule the history contradicts is a question for the user, not a silent fix. Missing
+     one of the bullets the `rules` skill always includes (e.g. never co-author a commit)
+     → propose adding it, translated.
 
 2. **Globs.** For each rule with `paths:`, how many files each glob matches:
 
