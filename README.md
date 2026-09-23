@@ -55,8 +55,10 @@ Without an argument they do the full pass (for `memory`, the bootstrap phases, s
 at a minimum usable catalog); with an area — a module, a directory, a subject — they map
 only that one, which is how the catalog grows afterwards: by the tasks that touch it.
 
-The `settings.json` it writes carries only the project's policy — no blind `git add`, no
-agent co-author attribution — and never names this plugin. The guards act for whoever
+The `settings.json` it writes carries only the project's policy — no blind `git add` —
+and never names this plugin. Whether commits and PRs keep agents (Claude, Codex, ...) as
+co-authors is asked by `/agent-kit:rules` with the rest of the commit policy, in your
+language, and written both to `rules/commit.md` and to `attribution` in `settings.json`. The guards act for whoever
 has the plugin installed, so each teammate runs the *Install* steps once on their
 machine; a clone without it still gets the deny list, just not the guards.
 

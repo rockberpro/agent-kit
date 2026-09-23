@@ -1,13 +1,13 @@
 ---
 name: update-hooks
-description: Reviews an existing harness's .agents/settings.json against this plugin - deny list, attribution, plugin entries left by older versions - and removes guard copies left in .agents/hooks/ by older versions, asking before removing anything. Use when the user asks to update, check or repair the hooks/guards or settings of a project that already has .agents/, after upgrading agent-kit, or as part of update-all.
+description: Reviews an existing harness's .agents/settings.json against this plugin - deny list, attribution matching the commit rule, plugin entries left by older versions - and removes guard copies left in .agents/hooks/ by older versions, asking before removing anything. Use when the user asks to update, check or repair the hooks/guards or settings of a project that already has .agents/, after upgrading agent-kit, or as part of update-all.
 ---
 
 # update-hooks
 
 The guards run from the plugin (`hooks/guard.sh`), for whoever has it installed. What a
-project carries is only `.agents/settings.json`, which denies blind `git add` and turns
-off agent co-author attribution. It never names this plugin: a project's config holds
+project carries is only `.agents/settings.json`, which denies blind `git add` and, when
+the team chose so, turns off agent co-author attribution. It never names this plugin: a project's config holds
 the project's policy, not the tool that wrote it.
 
 Language: nothing here writes prose, only JSON keys.
@@ -18,13 +18,16 @@ Language: nothing here writes prose, only JSON keys.
 
 2. **`settings.json`** against `${CLAUDE_PLUGIN_ROOT}/templates/settings.json`:
    - missing → copy the template.
-   - present → add only what it lacks: each `deny` entry,
-     `"attribution": { "commit": "", "pr": "" }`. Everything else stays. Not valid JSON →
-     report it and stop; do not hand-edit around it.
-   - `includeCoAuthoredBy` present → it is deprecated: propose replacing it with the
-     `attribution` block above, change it only on a yes.
-   - `attribution.commit` or `attribution.pr` not empty → commits or PRs get agent
-     attribution again: report it, change it only on a yes.
+   - present → add only what it lacks: each `deny` entry. Everything else stays. Not
+     valid JSON → report it and stop; do not hand-edit around it.
+   - `includeCoAuthoredBy` present → it is deprecated: propose the equivalent — `false`
+     → `"attribution": { "commit": "", "pr": "" }`, `true` → drop the key — and change
+     it only on a yes.
+   - `attribution` is the user's choice, not a default to restore. Compare it with the
+     co-author bullet of `rules/commit.md`: they disagree (an empty `attribution` but a
+     rule that keeps co-authors, or the reverse) → show both and ask which one holds,
+     in the user's language; fix the other only on that answer. `commit.md` says
+     nothing about co-authors → leave `attribution` as it is; `update-rules` asks.
    - entries older versions wrote about this plugin — the `agent-kit` or `univates.br`
      key in `extraKnownMarketplaces`, `agent-kit@agent-kit` or `agent-kit@univates.br`
      in `enabledPlugins` → list them and propose removing them; remove only on a yes.

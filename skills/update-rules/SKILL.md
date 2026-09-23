@@ -38,9 +38,15 @@ Run all of them, then report once.
    - `rules/commit.md` missing → it is policy: offer `/agent-kit:rules`, which asks for it.
      Present → check it against the last few hundred `git log --format=%s` subjects; a
      rule the history contradicts is a question for the user, not a silent fix. Missing
-     one of the bullets the `rules` skill always includes (e.g. never co-author a commit)
-     → propose adding it, translated. The co-author bullet is not a duplicate of
-     `attribution` in `settings.json`: that setting binds Claude Code only.
+     one of the bullets the `rules` skill always includes → propose adding it,
+     translated.
+   - `rules/commit.md` says nothing about agent co-authors → ask the user, in their
+     language, whether commits and PRs made with an agent (Claude, Codex, ...) keep the
+     agent as co-author or turn it off — propose what `git log --format=%B` shows, never
+     decide it. Write the answer the way the `rules` skill does: the bullet in
+     `commit.md` and the matching `attribution` in `settings.json`. An old "never
+     co-author" bullet a previous version added unasked → confirm it is still wanted.
+     The bullet is not a duplicate of `attribution`: that setting binds Claude Code only.
    - Every `.agents/memory/domain-*.md` has `rules/domain-*.md` of the same name, whose
      first line orders reading that note and whose globs cover the whole domain. Missing
      or without that line → write it the way the `rules` skill does (no policy in it).

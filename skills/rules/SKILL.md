@@ -104,8 +104,13 @@ propose defaults that match the history:
 - Message format: language, prefix/scope convention, ticket reference? (Default: one
   line.)
 - May the agent push? (Default: never.)
+- Should commits and PRs made with an agent (Claude, Codex, ...) keep the agent as
+  co-author (`Co-Authored-By:` trailer, "Generated with" footer), or turn that off?
+  Propose what `git log --format=%B` shows: trailers already there → keep, none → off.
+  Never decide it for the user.
 
-Then write it as imperative bullets. Always include, whatever the answers:
+Ask them in the user's language — the one they write to you in — not in this skill's
+English. Then write it as imperative bullets. Always include, whatever the answers:
 
 - never `git add -A` / `git add .` / `git add -u` — stage only the files of the change,
   after `git status` and `git diff`; a credential, real config or unrelated artifact
@@ -116,14 +121,21 @@ Then write it as imperative bullets. Always include, whatever the answers:
 - pull requests are short and objective: what changed and why, a few bullets at most —
   no walls of text, no restating the diff, no feature tours;
 - do not skip hooks or signing (`--no-verify`, `--no-gpg-sign`) unless asked;
-- never co-author a commit: no `Co-Authored-By:` trailer or any other agent attribution
-  in the message — the commit is the user's;
 - close with: `master-guard`, `secret-guard` and the `deny` in `settings.json` are the
   net for mistakes, not the rule.
 
-The co-author bullet overlaps `"attribution": { "commit": "", "pr": "" }` in `settings.json` on
-purpose: the setting enforces it for Claude Code only, the bullet reaches any other
-agent that reads `.agents/`. Keep both.
+The co-author answer goes in two places, both always, so they never disagree:
+
+- **off** → the bullet "never co-author a commit or PR: no `Co-Authored-By:` trailer or
+  any other agent attribution in the message or description", and
+  `"attribution": { "commit": "", "pr": "" }` in `.agents/settings.json`;
+- **keep** → the bullet "commits and PRs keep the agent's co-author attribution", and no
+  `attribution` key in `settings.json` (Claude Code's default adds it); remove an empty
+  one there.
+
+The setting binds Claude Code only; the bullet reaches any other agent that reads
+`.agents/`. Edit only that key of `settings.json` — the rest is `update-hooks`' — and
+stage it with the rule.
 
 If the answers carry a *why* worth keeping (a past incident, a team agreement), that goes
 in `.agents/memory/commit.md`, and the rule points at it.
