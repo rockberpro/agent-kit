@@ -166,6 +166,8 @@ flow:
 # 2. bump version in plugin.json (semver)
 claude plugin validate . --strict && claude plugin validate .claude-plugin/plugin.json --strict
 for t in hooks/*.test.sh; do bash "$t" || break; done
+# when a skill changed: full memory + rules passes on the fixtures in evals/ (costs real runs)
+claude plugin eval . --scaffold --allow-tools Bash Write Edit --runs 3
 git commit -am "feat(agent-kit): <what changed>"
 claude plugin tag agent-kit          # creates agent-kit--v0.9.0, checking that plugin.json
                                 # and the marketplace.json entry agree

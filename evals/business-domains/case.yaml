@@ -1,0 +1,44 @@
+schema_version: "1.1"
+name: business-domains
+description: >
+  A repo with two business domains gets domains.md, one domain-*.md note each, and a
+  domain rule per note whose globs cover the domain and whose first line orders the read.
+tags: [memory, rules, domains]
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: |
+    Map this repository's memory with the agent-kit memory skill (full pass), then write
+    its rules with the agent-kit rules skill (full pass).
+    Everything you would ask approval for is approved in advance. Commit policy: the
+    agent may commit on its own, one-line conventional commits in English, never push.
+    Do not ask business questions; record them as open questions in the notes.
+    Do not commit.
+  max_turns: 80
+  timeout_seconds: 1200
+  allowed_tools: [Read, Glob, Grep, Bash, Write, Edit, Skill, Agent]
+# ponytail: one run per case, each is a full memory + rules pass; --runs 3 before a release
+runs: 1
+graders:
+  - { type: tool_used, name: used-skill, tool: Skill, min: 1 }
+  - { type: file_exists, name: map, path: .agents/memory/domains.md }
+  - { type: file_exists, name: note-billing, path: .agents/memory/domain-billing.md }
+  - { type: file_exists, name: note-inventory, path: .agents/memory/domain-inventory.md }
+  - { type: file_exists, name: rule-billing, path: .agents/rules/domain-billing.md }
+  - { type: file_exists, name: rule-inventory, path: .agents/rules/domain-inventory.md }
+  - type: regex
+    name: rule-billing-orders-read
+    target: { source: file, path: .agents/rules/domain-billing.md }
+    pattern: "domain-billing\\.md"
+  - type: regex
+    name: rule-billing-glob
+    target: { source: file, path: .agents/rules/domain-billing.md }
+    pattern: "src/billing"
+  - type: llm
+    name: knowledge-captured
+    focus: files
+    criteria: >
+      The billing domain note records that an issued invoice is never edited (cancel and
+      reissue) and the reason. The inventory note records that stock_movement is an
+      append-only ledger and stock cannot go negative. domains.md names the hand-off
+      where issuing an invoice reserves stock. No note invents rules absent from the code.
