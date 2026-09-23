@@ -1,6 +1,6 @@
 {
   "name": "agent-kit",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "license": "MIT",
   "description": "Guards (master, secrets, memory drift) + .agents scaffold + memory/rules mapping skills + explorer, planner, implementer, test-runner and reviewer agents. Works for any project.",
   "author": {
