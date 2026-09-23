@@ -20,6 +20,8 @@ Language: nothing here writes prose, only JSON keys.
    - present → add only what it lacks: the `agent-kit` marketplace, `agent-kit@agent-kit`
      in `enabledPlugins`, each `deny` entry, `"attribution": { "commit": "", "pr": "" }`.
      Everything else stays. Not valid JSON → report it and stop; do not hand-edit around it.
+   - the `agent-kit` marketplace URL differs from the template's (e.g. the company moved
+     to a mirror) → report both, switch to the template's on a yes. Keep any `ref`.
    - `includeCoAuthoredBy` present → it is deprecated: propose replacing it with the
      `attribution` block above, change it only on a yes.
    - `attribution.commit` or `attribution.pr` not empty → commits or PRs get agent
