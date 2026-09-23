@@ -37,7 +37,7 @@ the root: the instructions file is `AGENTS.md` and `CLAUDE.md` is a symlink to i
 .agents/
   memory/            → note graph, one note per domain, MEMORY.md index (memory skill)
   rules/             → path-scoped instructions the harness injects (rules skill)
-  settings.json      → permissions + team marketplace (enables the guards)
+  settings.json      → permissions + attribution
   agents/            → project subagents (optional)
   skills/            → project skills (optional)
   hooks/             → this repository's own hooks (optional)
@@ -65,8 +65,8 @@ CLAUDE.md -> AGENTS.md
 
    - `CLAUDE.md` is a regular file and `AGENTS.md` does not exist → rename it
      (`git mv CLAUDE.md AGENTS.md`) and create the symlink. Content is preserved.
-   - `.agents/settings.json` exists but is missing a `deny` entry or the plugin → step 3
-     adds what is missing, preserving the rest.
+   - `.agents/settings.json` exists but is missing a `deny` entry or the attribution
+     block → step 3 adds what is missing, preserving the rest.
    - `.claude` or `CLAUDE.md` exists but is **not a symlink** (`[ ! -L .claude ]`) —
      almost always Windows:
      - a small file whose content is just `.agents` / `AGENTS.md` → the repository was
@@ -109,22 +109,22 @@ CLAUDE.md -> AGENTS.md
 
    Freshly copied, translate it into the project's language (keep the filename).
 
-3. **`.agents/settings.json`** — enables the plugin for whoever clones and denies blind
-   `git add`:
+3. **`.agents/settings.json`** — denies blind `git add` and turns off agent co-author
+   attribution:
 
    ```bash
    [ -e .agents/settings.json ] || cp "${CLAUDE_PLUGIN_ROOT}/templates/settings.json" .agents/settings.json
    ```
 
-   An existing one gets only what it lacks from the template — the `agent-kit`
-   marketplace, `agent-kit@agent-kit` in `enabledPlugins`, each `deny` entry,
-   `"attribution": { "commit": "", "pr": "" }` — and everything else in it stays. Not valid JSON → report it and stop; do not hand-edit
-   around it.
+   An existing one gets only what it lacks from the template — each `deny` entry,
+   `"attribution": { "commit": "", "pr": "" }` — and everything else in it stays. Not
+   valid JSON → report it and stop; do not hand-edit around it. Never write
+   `extraKnownMarketplaces` or `enabledPlugins` entries for this plugin: the project's
+   config carries the project's policy, not the tool that set it up.
 
    The guards (`master-guard`, `secret-guard`, `memory-drift-guard`) run from the plugin,
-   so they act wherever it is enabled; whoever clones is offered it when trusting the
-   folder. The `deny` list stops a stray `.env` or real config from being staged at all;
-   `secret-guard` is the net behind it.
+   so they act for whoever has it installed. The `deny` list stops a stray `.env` or real
+   config from being staged at all; `secret-guard` is the net behind it.
 
 4. **`AGENTS.md` at the root, with `CLAUDE.md` as a symlink to it.** The real file is
    `AGENTS.md` (a convention other CLIs also read); Claude Code sees it through the
@@ -154,8 +154,7 @@ CLAUDE.md -> AGENTS.md
    for a Portuguese project: `Notas e regras em .agents/ são escritas em português
    (pt-BR).`
 
-5. Report what you created (created vs. already existed), and say the plugin only
-   activates after `/plugin marketplace update` + a session restart. Confirm both links
+5. Report what you created (created vs. already existed). Confirm both links
    are real (`[ -L .claude ] && [ -L CLAUDE.md ]`), and tell Windows teammates to clone
    with symlinks on (`git clone -c core.symlinks=true`, Developer Mode enabled) — without
    it their `.claude` is a text file and the harness is silently off.

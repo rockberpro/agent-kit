@@ -1,10 +1,4 @@
 {
-  "extraKnownMarketplaces": {
-    "agent-kit": {
-      "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git" }
-    }
-  },
-  "enabledPlugins": { "agent-kit@agent-kit": true },
   "attribution": { "commit": "", "pr": "" },
   "permissions": {
     "allow": ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)"],
