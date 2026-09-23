@@ -8,7 +8,7 @@ H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sync-hooks.sh"
 KIT="$(dirname "$H")/.."
 bash -n "$H" || exit 1
 [ -x "$H" ] || { echo "missing exec bit: sync-hooks.sh (git update-index --chmod=+x)"; exit 1; }
-command -v jq >/dev/null || { echo "jq is required (the script needs it too)"; exit 1; }
+perl -MJSON::PP -e1 || { echo "perl with JSON::PP is required (the script needs it too)"; exit 1; }
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -20,6 +20,8 @@ check() { # check <label> <condition...>
   printf '%-4s %s\n' "$s" "$1"
 }
 run() { ( cd "$1" && shift && bash "$H" "$@" ); }
+# jt <perl expr on $j> <file>: true when the expression holds for the decoded file.
+jt() { perl -MJSON::PP -e 'local $/; open my $f, "<", $ARGV[1] or die; my $j = decode_json(<$f>); exit !eval $ARGV[0]' "$@"; }
 S=.agents/settings.json
 
 echo "== fresh .agents/: report, apply, then clean =="
@@ -30,7 +32,7 @@ check "report writes nothing"                    test ! -e "$p/$S" -a ! -e "$p/.
 run "$p" --apply >/dev/null; r=$?
 check "apply exits 0"                            test $r = 0
 check "guards copied, identical, executable"     bash -c "for g in master-guard secret-guard memory-drift-guard; do cmp -s '$KIT/hooks/'\$g.sh '$p/.agents/hooks/'\$g.sh && [ -x '$p/.agents/hooks/'\$g.sh ] || exit 1; done"
-check "settings: 3 guards, 5 denies, plugin"     jq -e '(.hooks.PreToolUse[0].hooks | length) == 3 and (.permissions.deny | length) == 5 and .enabledPlugins["agent-kit@agent-kit"]' "$p/$S"
+check "settings: 3 guards, 5 denies, plugin"     jt '@{$j->{hooks}{PreToolUse}[0]{hooks}} == 3 && @{$j->{permissions}{deny}} == 5 && $j->{enabledPlugins}{q(agent-kit@agent-kit)}' "$p/$S"
 run "$p" >/dev/null; r=$?
 check "second report is clean (exit 0)"          test $r = 0
 
@@ -50,12 +52,12 @@ JSON
 out="$(run "$p" --apply)"; r=$?
 check "exit 1: legacy entries are left for the user" test $r = 1
 check "legacy univates.br reported"              grep -q '^legacy .*univates.br' <<<"$out"
-check "project allow/deny/hooks kept"            jq -e '.permissions.allow == ["Bash(make:*)"] and (.permissions.deny | index("Bash(rm -rf:*)")) and (.hooks.PreToolUse[0].hooks[0].command == "bash x/php-check.sh")' "$p/$S"
-check "no duplicated deny"                       jq -e '[.permissions.deny[] | select(. == "Bash(git add -A:*)")] | length == 1' "$p/$S"
-check "master-guard not re-registered"           jq -e '[.hooks.PreToolUse[].hooks[].command | select(contains("master-guard.sh"))] | length == 1' "$p/$S"
-check "missing guards join the Bash group"       jq -e '(.hooks.PreToolUse[1].hooks | length) == 3' "$p/$S"
-check "plugin migrated, source carried over"     jq -e '.enabledPlugins["agent-kit@agent-kit"] and (.enabledPlugins["agent-kit@univates.br"] | not) and .extraKnownMarketplaces["agent-kit"].source.url == "https://example.test/kit.git"' "$p/$S"
-check "other plugins untouched"                  jq -e '.enabledPlugins["other@univates.br"] and .extraKnownMarketplaces["univates.br"]' "$p/$S"
+check "project allow/deny/hooks kept"            jt '"@{$j->{permissions}{allow}}" eq q(Bash(make:*)) && grep($_ eq q(Bash(rm -rf:*)), @{$j->{permissions}{deny}}) && $j->{hooks}{PreToolUse}[0]{hooks}[0]{command} eq q(bash x/php-check.sh)' "$p/$S"
+check "no duplicated deny"                       jt '1 == grep $_ eq q(Bash(git add -A:*)), @{$j->{permissions}{deny}}' "$p/$S"
+check "master-guard not re-registered"           jt '1 == grep /master-guard\.sh/, map $_->{command}, map @{$_->{hooks}}, @{$j->{hooks}{PreToolUse}}' "$p/$S"
+check "missing guards join the Bash group"       jt '@{$j->{hooks}{PreToolUse}[1]{hooks}} == 3' "$p/$S"
+check "plugin migrated, source carried over"     jt '$j->{enabledPlugins}{q(agent-kit@agent-kit)} && !$j->{enabledPlugins}{q(agent-kit@univates.br)} && $j->{extraKnownMarketplaces}{q(agent-kit)}{source}{url} eq q(https://example.test/kit.git)' "$p/$S"
+check "other plugins untouched"                  jt '$j->{enabledPlugins}{q(other@univates.br)} && $j->{extraKnownMarketplaces}{q(univates.br)}' "$p/$S"
 
 echo "== outdated guard copy: reported, replaced only with --force =="
 p="$(proj)"
@@ -70,12 +72,16 @@ check "--force replaces it, exit 0"              bash -c "[ $r = 0 ] && cmp -s '
 
 echo "== symlinked copies belong elsewhere: never written through =="
 p="$(proj)"; mkdir -p "$p/pkg" "$p/.agents/hooks"; echo '# pkg' > "$p/pkg/master-guard.sh"
-ln -s ../../pkg/master-guard.sh "$p/.agents/hooks/master-guard.sh"
+# Git Bash's `ln -s` copies unless told otherwise; real links need Developer Mode on Windows.
+MSYS="${MSYS:+$MSYS }winsymlinks:nativestrict" ln -s ../../pkg/master-guard.sh "$p/.agents/hooks/master-guard.sh" 2>/dev/null
+if [ ! -L "$p/.agents/hooks/master-guard.sh" ]; then echo "skip this OS cannot create symlinks"
+else
 out="$(run "$p" --apply --force)"; r=$?
 check "exit 1: the link is left for the user"   test $r = 1
 check "reported as linked"                       grep -q '^linked .*master-guard.sh' <<<"$out"
 check "link target untouched"                    bash -c "[ \"\$(cat '$p/pkg/master-guard.sh')\" = '# pkg' ] && [ -L '$p/.agents/hooks/master-guard.sh' ]"
 check "the other guards still installed"         test -f "$p/.agents/hooks/secret-guard.sh" -a ! -L "$p/.agents/hooks/secret-guard.sh"
+fi
 
 echo "== refuses instead of guessing =="
 mkdir -p "$tmp/none"

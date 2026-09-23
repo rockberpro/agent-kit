@@ -9,7 +9,7 @@ H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/memory-drift-guard.sh"
 bash -n "$H" || exit 1
 # The exec bit has to survive the clone: git records it, a plain `cp` does not.
 [ -x "$H" ] || { echo "missing exec bit: memory-drift-guard.sh (git update-index --chmod=+x)"; exit 1; }
-command -v jq >/dev/null || { echo "jq is required (the hook needs it too)"; exit 1; }
+perl -MJSON::PP -e1 || { echo "perl with JSON::PP is required (the hook needs it too)"; exit 1; }
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -49,7 +49,7 @@ t(){
   fi
   local cmd="${2//@/$dir}" cwd="$dir"
   [ "$cmd" != "$2" ] && { cwd="$tmp/cwd"; mkdir -p "$cwd"; }
-  local out; out="$(cd "$cwd" && printf '{"tool_input":{"command":%s}}' "$(jq -Rn --arg c "$cmd" '$c')" | bash "$H" 2>&1)"
+  local out; out="$(cd "$cwd" && printf '{"tool_input":{"command":%s}}' "$(perl -MJSON::PP -e 'print JSON::PP->new->allow_nonref->encode($ARGV[0])' "$cmd")" | bash "$H" 2>&1)"
   local r=$?; local s=ok
   [ "$r" = "$1" ] || { s=FAIL; fails=$((fails+1)); }
   printf '%-4s got=%s want=%s  <- %s [%s %s]\n' "$s" "$r" "$1" "$2" "$3" "${4:-}"
@@ -79,6 +79,11 @@ t 0 'git commit --amend --no-edit' '-'
 t 0 'git status' 'jobs/nightly.sh'
 t 0 'git log --grep commit' 'jobs/nightly.sh'
 t 0 'git -C /nope/missing commit -m x' 'jobs/nightly.sh'
+
+echo "== no JSON parser: a visible error (exit 1), not a silent pass =="
+mkdir -p "$tmp/noperl" && printf '#!/bin/sh\nexit 127\n' >"$tmp/noperl/perl" && chmod +x "$tmp/noperl/perl"
+out="$(printf '{}' | PATH="$tmp/noperl:$PATH" bash "$H" 2>&1)"; r=$?
+if [ $r = 1 ] && grep -q "NOT running" <<<"$out"; then echo "ok   parser missing -> exit 1"; else echo "FAIL parser missing -> got $r: $out"; fails=$((fails+1)); fi
 
 echo "failures=$fails"
 [ "$fails" -eq 0 ]

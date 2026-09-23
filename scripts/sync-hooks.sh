@@ -22,12 +22,11 @@ for a in "$@"; do
     *) echo "usage: $0 [--apply [--force]]" >&2; exit 2 ;;
   esac
 done
-command -v jq >/dev/null || { echo "jq is required" >&2; exit 2; }
+perl -MJSON::PP -e1 2>/dev/null || { echo "perl with JSON::PP is required (it ships with git)" >&2; exit 2; }
 
 KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GUARDS="master-guard secret-guard memory-drift-guard"
 URL="https://gitlab.univates.br/gitlab/pacotes/agent-kit.git"
-DENY='["Bash(git add -A:*)","Bash(git add --all:*)","Bash(git add .:*)","Bash(git add -u:*)","Bash(git add :/:*)"]'
 S=.agents/settings.json
 left=0
 say() { printf '%-8s %s\n' "$1" "$2"; case "$1" in missing|outdated|legacy|linked) left=1 ;; esac; }
@@ -50,69 +49,82 @@ for g in $GUARDS; do
 done
 
 # --- settings.json --------------------------------------------------------------------
-cmd_of() { printf 'bash "$CLAUDE_PROJECT_DIR/.agents/hooks/%s.sh"' "$1"; }
-
+# perl + JSON::PP, not jq: it ships with git on Windows (Git Bash) and Linux alike.
+# ponytail: JSON::PP keeps no key order, so a write sorts keys (canonical); only written when
+# something was added. Upgrade path: an order-preserving parser, if the reorder ever bites.
 if [ -L "$S" ]; then say linked "$S -> $(readlink "$S") (managed there; left alone)"; exit 1; fi
-if [ ! -e "$S" ]; then
-  if [ $apply = 0 ]; then say missing "$S"; exit 1; fi
-  hooks="$(for g in $GUARDS; do jq -n --arg c "$(cmd_of "$g")" '{type:"command",command:$c}'; done | jq -s .)"
-  jq -n --arg url "$URL" --argjson deny "$DENY" --argjson hooks "$hooks" '{
-    extraKnownMarketplaces: {"agent-kit": {source: {source: "url", url: $url}}},
-    enabledPlugins: {"agent-kit@agent-kit": true},
-    permissions: {
-      allow: ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)"],
-      deny: $deny
-    },
-    hooks: {PreToolUse: [{matcher: "Bash", hooks: $hooks}]}
-  }' > "$S" && say added "$S"
-  exit $left
-fi
+perl - "$S" "$apply" "$URL" $GUARDS <<'PL'
+use strict; use warnings; use JSON::PP;
+my ($S, $apply, $url, @guards) = @ARGV;
+my @deny = ('Bash(git add -A:*)', 'Bash(git add --all:*)', 'Bash(git add .:*)', 'Bash(git add -u:*)', 'Bash(git add :/:*)');
+my $json = JSON::PP->new->utf8->pretty->canonical->indent_length(2);
+my $left = 0;
+sub say_ { printf "%-8s %s\n", @_; $left = 1 if $_[0] =~ /^(missing|legacy)$/ }
+sub fix { say_($apply ? 'added' : 'missing', "$S $_[0]") }
+sub hook { { type => 'command', command => qq(bash "\$CLAUDE_PROJECT_DIR/.agents/hooks/$_[0].sh") } }
+sub write_s { open my $f, '>:raw', $S or die "$S: $!\n"; print $f $json->encode($_[0]); close $f or die "$S: $!\n" }
 
-jq -e . "$S" >/dev/null 2>&1 || { echo "$S is not valid JSON — fix it by hand first" >&2; exit 2; }
-new="$(jq . "$S")"
-edit() { new="$(printf '%s' "$new" | jq "$@")"; }
-has() { printf '%s' "$new" | jq -e "$@" >/dev/null 2>&1; }
+if (!-e $S) {
+  unless ($apply) { say_ missing => $S; exit 1 }
+  write_s({
+    extraKnownMarketplaces => { 'agent-kit' => { source => { source => 'url', url => $url } } },
+    enabledPlugins => { 'agent-kit@agent-kit' => JSON::PP::true },
+    permissions => {
+      allow => ['Bash(git status:*)', 'Bash(git diff:*)', 'Bash(git log:*)', 'Bash(git show:*)'],
+      deny => [@deny],
+    },
+    hooks => { PreToolUse => [{ matcher => 'Bash', hooks => [map { hook($_) } @guards] }] },
+  });
+  say_ added => $S; exit 0;
+}
+
+my $j = eval { local $/; open my $f, '<:raw', $S or die; $json->decode(<$f>) };
+ref $j eq 'HASH' or do { print STDERR "$S is not valid JSON — fix it by hand first\n"; exit 2 };
+my $before = $json->encode($j);
 
 # Marketplace + plugin. The marketplace was once called univates.br: carry its source over
 # instead of guessing a URL, and leave the old key for the user — other plugins may use it.
-if has '.extraKnownMarketplaces["agent-kit"]'; then say ok "$S extraKnownMarketplaces.agent-kit"
-else
-  src="$(printf '%s' "$new" | jq -c '.extraKnownMarketplaces["univates.br"].source // empty')"
-  [ -n "$src" ] || src="$(jq -nc --arg url "$URL" '{source:"url",url:$url}')"
-  edit --argjson s "$src" '.extraKnownMarketplaces["agent-kit"] = {source: $s}'
-  say "$([ $apply = 1 ] && echo added || echo missing)" "$S extraKnownMarketplaces.agent-kit"
-fi
-if has '.enabledPlugins["agent-kit@agent-kit"]'; then say ok "$S enabledPlugins.agent-kit@agent-kit"
-else
-  edit '.enabledPlugins["agent-kit@agent-kit"] = true | del(.enabledPlugins["agent-kit@univates.br"])'
-  say "$([ $apply = 1 ] && echo added || echo missing)" "$S enabledPlugins.agent-kit@agent-kit"
-fi
-for k in $(printf '%s' "$new" | jq -r '(.extraKnownMarketplaces // {} | keys[]), (.enabledPlugins // {} | keys[]) | select(test("univates\\.br"))'); do
-  say legacy "$S $k (old marketplace name; remove it if nothing else uses it)"
-done
+my $mk = $j->{extraKnownMarketplaces} //= {};
+if ($mk->{'agent-kit'}) { say_ ok => "$S extraKnownMarketplaces.agent-kit" }
+else {
+  my $old = $mk->{'univates.br'};
+  $mk->{'agent-kit'} = { source => ($old && $old->{source}) || { source => 'url', url => $url } };
+  fix('extraKnownMarketplaces.agent-kit');
+}
+my $ep = $j->{enabledPlugins} //= {};
+if ($ep->{'agent-kit@agent-kit'}) { say_ ok => "$S enabledPlugins.agent-kit\@agent-kit" }
+else {
+  $ep->{'agent-kit@agent-kit'} = JSON::PP::true;
+  delete $ep->{'agent-kit@univates.br'};
+  fix('enabledPlugins.agent-kit@agent-kit');
+}
+for my $k ((sort keys %$mk), (sort keys %$ep)) {
+  say_ legacy => "$S $k (old marketplace name; remove it if nothing else uses it)" if $k =~ /univates\.br/;
+}
 
 # deny entries: added one by one, whatever else the project denies stays.
-for d in $(printf '%s' "$DENY" | jq -r '.[] | @base64'); do
-  d="$(printf '%s' "$d" | base64 -d)"
-  if has --arg d "$d" '.permissions.deny // [] | index($d)'; then continue; fi
-  edit --arg d "$d" '.permissions.deny = ((.permissions.deny // []) + [$d])'
-  say "$([ $apply = 1 ] && echo added || echo missing)" "$S permissions.deny $d"
-done
+my $dl = $j->{permissions}{deny} //= [];
+for my $d (@deny) {
+  next if grep { $_ eq $d } @$dl;
+  push @$dl, $d; fix("permissions.deny $d");
+}
 
 # Hook registrations: a guard counts as registered if any PreToolUse command names it,
 # however the project spelled the path. Missing ones join the first Bash group.
-for g in $GUARDS; do
-  if has --arg g "$g.sh" '[.hooks.PreToolUse[]?.hooks[]?.command | select(contains($g))] | length > 0'; then
-    say ok "$S hook $g"; continue
-  fi
-  edit --arg c "$(cmd_of "$g")" '
-    .hooks.PreToolUse //= [] |
-    if any(.hooks.PreToolUse[]; .matcher == "Bash")
-    then (first(.hooks.PreToolUse | to_entries[] | select(.value.matcher == "Bash") | .key)) as $i
-         | .hooks.PreToolUse[$i].hooks += [{type:"command",command:$c}]
-    else .hooks.PreToolUse += [{matcher:"Bash",hooks:[{type:"command",command:$c}]}] end'
-  say "$([ $apply = 1 ] && echo added || echo missing)" "$S hook $g"
-done
+my $pre = $j->{hooks}{PreToolUse} //= [];
+for my $g (@guards) {
+  if (grep { index($_->{command} // '', "$g.sh") >= 0 } map { @{ $_->{hooks} || [] } } @$pre) {
+    say_ ok => "$S hook $g"; next;
+  }
+  my ($grp) = grep { ($_->{matcher} // '') eq 'Bash' } @$pre;
+  push @$pre, $grp = { matcher => 'Bash', hooks => [] } unless $grp;
+  push @{ $grp->{hooks} }, hook($g);
+  fix("hook $g");
+}
 
-if [ $apply = 1 ] && [ "$new" != "$(jq . "$S")" ]; then printf '%s\n' "$new" > "$S"; fi
-exit $left
+# Unchanged data is never rewritten, so an in-sync file keeps its own formatting.
+write_s($j) if $apply && $json->encode($j) ne $before;
+exit $left;
+PL
+r=$?
+case $r in 0|1) exit $((left | r)) ;; *) exit 2 ;; esac

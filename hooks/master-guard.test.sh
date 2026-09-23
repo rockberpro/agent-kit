@@ -9,7 +9,7 @@ H="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/master-guard.sh"
 bash -n "$H" || exit 1
 # The exec bit has to survive the clone: git records it, a plain `cp` does not.
 [ -x "$(dirname "$H")/master-guard.sh" ] || { echo "missing exec bit: master-guard.sh (git update-index --chmod=+x)"; exit 1; }
-command -v jq >/dev/null || { echo "jq is required (the hook needs it too)"; exit 1; }
+perl -MJSON::PP -e1 || { echo "perl with JSON::PP is required (the hook needs it too)"; exit 1; }
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -27,7 +27,7 @@ on_feature="$(mkrepo my-branch)"
 
 fails=0
 t(){ # t <cwd> <command> <expected exit>
-  local out; out="$(cd "$1" && printf '{"tool_input":{"command":%s}}' "$(jq -Rn --arg c "$2" '$c')" | bash "$H" 2>&1)"
+  local out; out="$(cd "$1" && printf '{"tool_input":{"command":%s}}' "$(perl -MJSON::PP -e 'print JSON::PP->new->allow_nonref->encode($ARGV[0])' "$2")" | bash "$H" 2>&1)"
   local r=$?; local s=ok
   [ "$r" = "$3" ] || { s=FAIL; fails=$((fails+1)); }
   printf '%-4s got=%s want=%s  <- %s\n' "$s" "$r" "$3" "$2"
@@ -100,6 +100,11 @@ mast 'git fetch' 0
 mast 'git log --merges' 0
 mast 'git log --grep commit' 0
 mast 'echo "git commitment"' 0
+
+echo "== no JSON parser: a visible error (exit 1), not a silent pass =="
+mkdir -p "$tmp/noperl" && printf '#!/bin/sh\nexit 127\n' >"$tmp/noperl/perl" && chmod +x "$tmp/noperl/perl"
+out="$(printf '{}' | PATH="$tmp/noperl:$PATH" bash "$H" 2>&1)"; r=$?
+if [ $r = 1 ] && grep -q "NOT running" <<<"$out"; then echo "ok   parser missing -> exit 1"; else echo "FAIL parser missing -> got $r: $out"; fails=$((fails+1)); fi
 
 echo "failures=$fails"
 [ "$fails" -eq 0 ]
