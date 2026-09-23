@@ -66,7 +66,7 @@ turns the guards on in every clone:
     }
   },
   "enabledPlugins": { "agent-kit@agent-kit": true },
-  "includeCoAuthoredBy": false
+  "attribution": { "commit": "", "pr": "" }
 }
 ```
 

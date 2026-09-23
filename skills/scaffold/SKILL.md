@@ -118,7 +118,7 @@ CLAUDE.md -> AGENTS.md
 
    An existing one gets only what it lacks from the template — the `agent-kit`
    marketplace, `agent-kit@agent-kit` in `enabledPlugins`, each `deny` entry,
-   `"includeCoAuthoredBy": false` — and everything else in it stays. Not valid JSON → report it and stop; do not hand-edit
+   `"attribution": { "commit": "", "pr": "" }` — and everything else in it stays. Not valid JSON → report it and stop; do not hand-edit
    around it.
 
    The guards (`master-guard`, `secret-guard`, `memory-drift-guard`) run from the plugin,
