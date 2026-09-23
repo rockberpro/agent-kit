@@ -65,7 +65,8 @@ turns the guards on in every clone:
       "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git" }
     }
   },
-  "enabledPlugins": { "agent-kit@agent-kit": true }
+  "enabledPlugins": { "agent-kit@agent-kit": true },
+  "includeCoAuthoredBy": false
 }
 ```
 

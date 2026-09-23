@@ -112,10 +112,11 @@ Then write it as imperative bullets. Always include, whatever the answers:
   showing up means stop and flag it;
 - on the main branch, create a branch before any commit;
 - do not skip hooks or signing (`--no-verify`, `--no-gpg-sign`) unless asked;
-- never co-author a commit: no `Co-Authored-By:` trailer or any other agent attribution
-  in the message — the commit is the user's;
 - close with: `master-guard`, `secret-guard` and the `deny` in `settings.json` are the
   net for mistakes, not the rule.
+
+No bullet about `Co-Authored-By:` or agent attribution: `"includeCoAuthoredBy": false`
+in `settings.json` turns it off in config, which a rule cannot do reliably.
 
 If the answers carry a *why* worth keeping (a past incident, a team agreement), that goes
 in `.agents/memory/commit.md`, and the rule points at it.
