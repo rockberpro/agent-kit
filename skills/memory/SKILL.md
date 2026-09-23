@@ -277,7 +277,10 @@ Note format:
   syntax as `rules/`. That is what `memory-drift-guard` uses to block a commit that
   touches the area without bringing the note along. One glob per line — the guard does
   not expand `{a,b}`. Globs of different notes should not overlap, or one file demands
-  two notes. A conceptual note, with no area of its own, has no frontmatter.
+  two notes. A conceptual note, with no area of its own, has no frontmatter. Declaring
+  `paths:` also owes the note a **read rule** over the same globs (the `rules` skill
+  writes it), so the agent reads the note at the first Read in the area, not only at
+  commit.
 - A domain note also says `kind: domain` there (a module note inside a domain,
   `kind: module`) — see the domains phase. It goes in even when the note has no `paths:`.
 
@@ -317,7 +320,8 @@ knowledge.
 ## Report
 
 At the end: notes created/extended, what went into `AGENTS.md`, the open questions still
-unanswered, the **domain rules** owed (one per `kind: domain` note, with its globs), and the
+unanswered, the **read rules** owed (one per `kind: domain` note, with the domain's globs,
+and one per other note with `paths:`, with those globs), and the
 **rule candidates** (area + one line each) — offer `/agent-kit:rules` for them.
 
 ## Maintenance

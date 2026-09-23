@@ -1,0 +1,35 @@
+schema_version: "1.1"
+name: area-notes-read-rules
+description: >
+  A single-domain project whose area notes declare paths: but no kind:, with rules/
+  holding only memory.md. The update pass must give each note with paths: a read rule
+  over the same globs whose first line orders reading the note, and none to the
+  conceptual note.
+tags: [rules, update]
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: |
+    Review this repository's rules with the agent-kit update-rules skill.
+    Everything you would ask approval for is approved in advance.
+    Do not write a commit policy and do not commit.
+  max_turns: 40
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Bash, Write, Edit, Skill, Agent]
+runs: 1
+graders:
+  - { type: tool_used, name: used-skill, tool: Skill, min: 1 }
+  - { type: file_exists, name: rule-jobs, path: .agents/rules/jobs.md }
+  - { type: file_exists, name: rule-webhooks, path: .agents/rules/webhooks.md }
+  - type: regex
+    name: rule-jobs-orders-read
+    target: { source: file, path: .agents/rules/jobs.md }
+    pattern: "memory/jobs\\.md"
+  - type: regex
+    name: rule-jobs-glob
+    target: { source: file, path: .agents/rules/jobs.md }
+    pattern: "jobs/\\*\\*"
+  - type: regex
+    name: rule-webhooks-glob
+    target: { source: file, path: .agents/rules/webhooks.md }
+    pattern: "src/webhooks/\\*\\*"

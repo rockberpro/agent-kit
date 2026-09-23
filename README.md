@@ -125,9 +125,10 @@ All three guards are checks in one hook, `hooks/guard.sh`, run before every Bash
   each fact goes (`AGENTS.md` / `rules/` / `memory/`).
 - **skill `/agent-kit:rules [area]`** — path-scoped rules in `.agents/rules/`: asks the
   commit policy and writes the always-on `commit.md`, then one short imperative rule per
-  area, globs checked against `git ls-files`. Every `kind: domain` note gets a mandatory
-  domain rule over the domain's globs that orders reading the note, so the agent reads
-  it as soon as it opens a file in that domain.
+  area, globs checked against `git ls-files`. Every note that owns an area gets a
+  mandatory read rule that orders reading it — a `kind: domain` note over the whole
+  domain, any other note with `paths:` over those globs — so the agent reads it as soon
+  as it opens a file there, not only when the commit guard catches it.
 - **agent `agent-kit:explorer`** — read-only investigator: maps a new demand or the
   blast radius of a change, returns a report, never edits. The `memory` and
   `update-memory` skills fan out to it.
