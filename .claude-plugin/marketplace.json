@@ -1,10 +1,7 @@
 {
   "name": "agent-kit",
   "description": "Agent harness for new projects: guards, .agents scaffold, memory and rules mapping skills.",
-  "owner": {
-    "name": "Rockberpro",
-    "email": "rockberpro@gmail.com"
-  },
+  "owner": { "name": "agent-kit contributors" },
   "plugins": [
     {
       "name": "agent-kit",
