@@ -55,23 +55,10 @@ Without an argument they do the full pass (for `memory`, the bootstrap phases, s
 at a minimum usable catalog); with an area — a module, a directory, a subject — they map
 only that one, which is how the catalog grows afterwards: by the tasks that touch it.
 
-The `settings.json` it writes declares the marketplace for the team, which is what
-turns the guards on in every clone:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "agent-kit": {
-      "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git" }
-    }
-  },
-  "enabledPlugins": { "agent-kit@agent-kit": true },
-  "attribution": { "commit": "", "pr": "" }
-}
-```
-
-Whoever clones the project later is asked whether to install it when trusting the
-folder — they do not need to repeat the steps above.
+The `settings.json` it writes carries only the project's policy — no blind `git add`, no
+agent co-author attribution — and never names this plugin. The guards act for whoever
+has the plugin installed, so each teammate runs the *Install* steps once on their
+machine; a clone without it still gets the deny list, just not the guards.
 
 **Windows:** `.claude` and `CLAUDE.md` are symlinks. Turn on Developer Mode (Settings →
 System → For developers) and clone with `git clone -c core.symlinks=true ...`; otherwise
@@ -185,41 +172,37 @@ git push --follow-tags
 
 There is no CI in this repository on purpose — the kit does not assume a forge. The
 validate + self-check line above is the gate: skip it and a broken guard reaches every
-project on the next `marketplace update`. The guards and the self-checks need only `bash`, `git` and `perl`
+machine on the next `marketplace update`. The guards and the self-checks need only `bash`, `git` and `perl`
 (with its core `JSON::PP`), which Git for Windows bundles and every Linux git pulls in.
 
-In the projects: `/plugin marketplace update` and restart the session.
+On each machine: `/plugin marketplace update` and restart the session.
 
-**Pinning** (a project that must not break) — `ref` in `extraKnownMarketplaces` of the
-project's `.claude/settings.json`:
+**Pinning** (a machine that must not break) — register the marketplace at a tag:
 
-```json
-{ "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git", "ref": "agent-kit--v0.11.0" } }
+```bash
+claude plugin marketplace add https://github.com/rockberpro/agent-kit.git#agent-kit--v0.11.0
 ```
 
-Without `ref` it follows the default branch and picks up everything that lands there.
+Without a ref it follows the default branch and picks up everything that lands there.
 
 ## Company mirror
 
 A company that cannot depend on someone else's repository keeps its own copy and
-decides when to take updates. The URL lives in one place, `templates/settings.json` —
-that is what `scaffold` writes into every project.
+decides when to take updates. Projects never name the marketplace, so nothing in them
+changes — only where each machine gets the plugin from.
 
 ```bash
 git clone https://github.com/rockberpro/agent-kit.git && cd agent-kit
 git remote rename origin upstream
 git remote add origin <company-git-url>
-# point new projects at the mirror: the "url" in templates/settings.json
-git commit -m "chore: point the marketplace at the company mirror" templates/settings.json
 git push -u origin main --tags
 ```
 
-Keep the marketplace and plugin names (`agent-kit`, `agent-kit@agent-kit`): projects and
-pins refer to them.
+Keep the marketplace and plugin names (`agent-kit`, `agent-kit@agent-kit`): the install
+commands refer to them.
 
-- **Machines:** `claude plugin marketplace add <company-git-url>` instead of the GitHub URL.
-- **Existing projects:** `/agent-kit:update-hooks` offers to switch their marketplace URL
-  to the template's.
+- **Machines:** `claude plugin marketplace add <company-git-url>` instead of the GitHub URL
+  (already registered → `claude plugin marketplace remove agent-kit` first).
 - **Taking an update:** `git fetch upstream --tags && git merge agent-kit--v<version>`,
   run the release gate above, then `git push origin main --tags`. The upstream tags
   come along, so `ref` pins keep working.
