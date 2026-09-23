@@ -1,5 +1,4 @@
 {
-  "attribution": { "commit": "", "pr": "" },
   "permissions": {
     "allow": ["Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git show:*)"],
     "deny": ["Bash(git add -A:*)", "Bash(git add --all:*)", "Bash(git add .:*)", "Bash(git add -u:*)", "Bash(git add :/:*)"]

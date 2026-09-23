@@ -37,7 +37,7 @@ the root: the instructions file is `AGENTS.md` and `CLAUDE.md` is a symlink to i
 .agents/
   memory/            → note graph, one note per domain, MEMORY.md index (memory skill)
   rules/             → path-scoped instructions the harness injects (rules skill)
-  settings.json      → permissions + attribution
+  settings.json      → permissions (+ attribution, from the rules skill)
   agents/            → project subagents (optional)
   skills/            → project skills (optional)
   hooks/             → this repository's own hooks (optional)
@@ -65,8 +65,8 @@ CLAUDE.md -> AGENTS.md
 
    - `CLAUDE.md` is a regular file and `AGENTS.md` does not exist → rename it
      (`git mv CLAUDE.md AGENTS.md`) and create the symlink. Content is preserved.
-   - `.agents/settings.json` exists but is missing a `deny` entry or the attribution
-     block → step 3 adds what is missing, preserving the rest.
+   - `.agents/settings.json` exists but is missing a `deny` entry → step 3 adds what is
+     missing, preserving the rest.
    - `.claude` or `CLAUDE.md` exists but is **not a symlink** (`[ ! -L .claude ]`) —
      almost always Windows:
      - a small file whose content is just `.agents` / `AGENTS.md` → the repository was
@@ -109,16 +109,16 @@ CLAUDE.md -> AGENTS.md
 
    Freshly copied, translate it into the project's language (keep the filename).
 
-3. **`.agents/settings.json`** — denies blind `git add` and turns off agent co-author
-   attribution:
+3. **`.agents/settings.json`** — denies blind `git add`:
 
    ```bash
    [ -e .agents/settings.json ] || cp "${CLAUDE_PLUGIN_ROOT}/templates/settings.json" .agents/settings.json
    ```
 
-   An existing one gets only what it lacks from the template — each `deny` entry,
-   `"attribution": { "commit": "", "pr": "" }` — and everything else in it stays. Not
-   valid JSON → report it and stop; do not hand-edit around it. Never write
+   An existing one gets only what it lacks from the template — each `deny` entry — and
+   everything else in it stays. Agent co-author attribution is the user's choice: the
+   `rules` skill asks it with the commit policy and writes `attribution` then; do not
+   set it here. Not valid JSON → report it and stop; do not hand-edit around it. Never write
    `extraKnownMarketplaces` or `enabledPlugins` entries for this plugin: the project's
    config carries the project's policy, not the tool that set it up.
 
