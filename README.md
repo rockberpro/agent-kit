@@ -11,7 +11,7 @@ The repository root is the plugin and also a one-entry marketplace, both called
 Register the marketplace — **once per machine**, not per project:
 
 ```bash
-claude plugin marketplace add https://gitlab.univates.br/gitlab/pacotes/agent-kit.git
+claude plugin marketplace add https://github.com/rockberpro/agent-kit.git
 ```
 
 Install `agent-kit`. The default scope is `user`, which is what you want here: the
@@ -62,7 +62,7 @@ turns the guards on in every clone:
 {
   "extraKnownMarketplaces": {
     "agent-kit": {
-      "source": { "source": "url", "url": "https://gitlab.univates.br/gitlab/pacotes/agent-kit.git" }
+      "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git" }
     }
   },
   "enabledPlugins": { "agent-kit@agent-kit": true }
@@ -138,18 +138,14 @@ All three guards are checks in one hook, `hooks/guard.sh`, run before every Bash
 
 ## Publish
 
-```bash
-git remote add origin https://gitlab.univates.br/gitlab/pacotes/agent-kit.git
-git push -u origin master
-```
+The marketplace is this repository; a release is a pushed tag (see *Versioning*).
 
 **If the repository is private**, `marketplace add` clones without interaction and has
 no way to ask for a password — either the repository is public/internal, or every
 person needs a credential helper already configured
-(`git config --global credential.helper store`, with a GitLab access token). If that
+(`git config --global credential.helper store`, with an access token). If that
 becomes friction, switch the URL to SSH
-(`git@gitlab.univates.br:gitlab/pacotes/agent-kit.git`), which reuses the key you
-already have on `alfa`.
+(`git@github.com:rockberpro/agent-kit.git`).
 
 ## Versioning
 
@@ -179,7 +175,7 @@ In the projects: `/plugin marketplace update` and restart the session.
 project's `.claude/settings.json`:
 
 ```json
-{ "source": { "source": "url", "url": "https://gitlab.univates.br/gitlab/pacotes/agent-kit.git", "ref": "agent-kit--v0.9.0" } }
+{ "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git", "ref": "agent-kit--v0.9.0" } }
 ```
 
 Without `ref` it follows the default branch and picks up everything that lands there.

@@ -1,7 +1,7 @@
 {
   "extraKnownMarketplaces": {
     "agent-kit": {
-      "source": { "source": "url", "url": "https://gitlab.univates.br/gitlab/pacotes/agent-kit.git" }
+      "source": { "source": "url", "url": "https://github.com/rockberpro/agent-kit.git" }
     }
   },
   "enabledPlugins": { "agent-kit@agent-kit": true },
