@@ -51,6 +51,17 @@ case "$branch" in
   *)           on_protected=0 ;;
 esac
 
+# `git switch -c x && git commit` runs the commit on the new branch, but this hook only
+# sees the branch as it is now. Only `&&` counts (with `;` a failed switch still
+# commits), and only when nothing before it already writes to master/main.
+# ponytail: new branches only; `git switch existing && git commit` still blocks.
+new_branch='git[[:space:]]+(switch[[:space:]]+(-c|-C|--create|--force-create)|checkout[[:space:]]+-[bB])[[:space:]]+[^;&|]*&&'
+if [ "$on_protected" = 1 ] && [[ $cmd =~ $new_branch ]]; then
+  before="${cmd%%"${BASH_REMATCH[0]}"*}"
+  (cmd="$before"; has_verb commit || has_verb cherry-pick || has_verb revert || has_verb am \
+    || has_verb rebase || has_verb merge || has_verb reset || has_verb push) || on_protected=0
+fi
+
 # A refspec naming master/main as the destination: `origin master`, `HEAD:master`,
 # `:main` (delete), `+master` (force). `master:staging` is not a write to master.
 # `--mirror`/`--all` push every ref, master included.
