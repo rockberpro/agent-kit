@@ -101,6 +101,17 @@ mast 'git log --merges' 0
 mast 'git log --grep commit' 0
 mast 'echo "git commitment"' 0
 
+echo "== on master: a branch created first with && takes the commit =="
+mast 'git switch -c feat && git commit -m x' 0
+mast 'git checkout -b feat && git add a && git commit -m x' 0
+mast 'git checkout -b feat origin/main && git commit -m x' 0
+mast 'git switch -c feat && git push -u origin feat' 0
+mast 'git switch -c feat; git commit -m x' 2
+mast 'git switch feat && git commit -m x' 2
+mast 'git commit -m x && git switch -c feat' 2
+mast 'git commit -m x && git switch -c feat && git commit -m y' 2
+mast 'git switch -c feat && git push origin main' 2
+
 echo "== no JSON parser: a visible error (exit 1), not a silent pass =="
 mkdir -p "$tmp/noperl" && printf '#!/bin/sh\nexit 127\n' >"$tmp/noperl/perl" && chmod +x "$tmp/noperl/perl"
 out="$(printf '{}' | PATH="$tmp/noperl:$PATH" bash "$H" 2>&1)"; r=$?
