@@ -61,7 +61,7 @@ Run all of them, then report once. Each finding: note, what is wrong, proposed f
 
 5. **Area notes without `paths:`.** A note that describes a directory or module
    (`module-*`, a jobs/integration note) but has no frontmatter is invisible to the
-   guard. Propose the globs.
+   guard and gets no read rule. Propose the globs.
 
 6. **Domain declaration.** The domain rules follow `kind: domain` in a note's
    frontmatter, not its filename. A `domain-*.md` without it → add `kind: domain`

@@ -44,8 +44,8 @@ Every rule's text and heading go in that language, the commit policy included �
 
 ## Arguments
 
-- **No argument** — full pass: the always-on rules, then one rule per area that has a
-  candidate (below). Reviewing rules that already exist — dead globs, duplicates,
+- **No argument** — full pass: the always-on rules, the read rules (one per note that
+  owns an area, below), then one rule per area that has a candidate. Reviewing rules that already exist — dead globs, duplicates,
   language — is `/agent-kit:update-rules`.
 - **An area** (`$ARGUMENTS`) — only that area's rule. Read its memory note first; if
   there is none, run `/agent-kit:memory <area>` first or ask the user whether to write
@@ -140,22 +140,28 @@ stage it with the rule.
 If the answers carry a *why* worth keeping (a past incident, a team agreement), that goes
 in `.agents/memory/commit.md`, and the rule points at it.
 
-## Domain rules — mandatory for every `kind: domain` note
+## Read rules — mandatory for every note that owns an area
 
-When memory splits the system into domains (business or technical), each note whose
-frontmatter says `kind: domain` gets a rule of the same name in `rules/`
-(`domain-billing.md` → `rules/domain-billing.md`). The declaration decides, never the
-filename. It is how
-reading the note stops being optional: the harness injects it the moment the agent reads
-any file of the domain. No policy in it, so no question to ask beyond listing it with
-the others.
+A note nobody opens is not knowledge. The harness injects a rule the moment the agent
+reads a matching file, so a rule is how reading the note stops being optional — at the
+first Read in the area, before the first wrong line, not only at commit. Two kinds of
+note own an area, and each gets a **read rule** of the same name in `rules/`
+(`<note>.md` → `rules/<note>.md`):
+
+- **a domain note** — frontmatter says `kind: domain`. Its rule is the **domain rule**:
+  its globs cover the whole domain, including modules that have their own notes (the
+  note's `paths:` may be narrower; the rule's may not);
+- **any other note with `paths:`** — a module, a job, an integration, a single trap. Its
+  rule's globs are the note's `paths:`, no narrower.
+
+The declaration decides — `kind: domain` or `paths:` — never the filename. A conceptual
+note (no `paths:`, no `kind: domain`) gets none. No policy in a read rule, so no
+question to ask beyond listing it with the others.
 
 `domains.md` maps several domains but no note declares `kind: domain` → do not skip in
 silence: list the notes it links to and ask which are domains, then write the `kind:`
 line into each (`domain` or `module`) before writing the rules.
 
-- **Globs cover the whole domain**, including modules that have their own notes (the
-  note's `paths:` may be narrower; the rule's may not).
 - **First line orders the read**, before anything else:
 
   ```markdown
@@ -169,11 +175,15 @@ line into each (`domain` or `module`) before writing the rules.
   - Before reading further or changing anything here, read
     `.agents/memory/domain-billing.md` — and `domains.md` if the task crosses into
     another domain.
-  - <the domain's prohibitions, mandatory steps or invariants, if any — none is fine>
+  - <the area's prohibitions, mandatory steps or invariants, if any — none is fine>
   ```
 
-  A rule that is only the read order is complete; do not pad it with rules the domain
-  does not have.
+  For a note that is not a domain, the first line names just that note. A rule that is
+  only the read order is complete; do not pad it with rules the area does not have.
+- **Globs may overlap** between read rules, unlike notes' `paths:`: a file in a module
+  of a domain loads both rules and the agent reads both notes — which is the point.
+- **One rule per area.** An area whose note already has a path-scoped rule gets the read
+  order as that rule's first line, not a second file.
 
 The rest follows the path-scoped rules below.
 
@@ -199,4 +209,5 @@ the hook does *not* cover.
 ## Report
 
 List created/changed/deleted rules with their globs and how many files each glob matches
-(`git ls-files ':(glob)<glob>' | wc -l`), and the candidates you left as notes on purpose.
+(`git ls-files ':(glob)<glob>' | wc -l`), the read rules among them (one per note that
+owns an area), and the candidates you left as notes on purpose.
