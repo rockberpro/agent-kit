@@ -101,8 +101,8 @@ policy, and policy is the user's call — **ask**, do not assume, and read `git 
 propose defaults that match the history:
 
 - May the agent run `git commit` on its own, or only stage and hand over the message?
-- Message format: language, one line or subject + body, prefix/scope convention, ticket
-  reference?
+- Message format: language, prefix/scope convention, ticket reference? (Default: one
+  line.)
 - May the agent push? (Default: never.)
 
 Then write it as imperative bullets. Always include, whatever the answers:
@@ -110,7 +110,11 @@ Then write it as imperative bullets. Always include, whatever the answers:
 - never `git add -A` / `git add .` / `git add -u` — stage only the files of the change,
   after `git status` and `git diff`; a credential, real config or unrelated artifact
   showing up means stop and flag it;
-- on the main branch, create a branch before any commit;
+- never commit on `main`/`master`: create a branch before the first commit;
+- commit messages are concise and clear, one line saying what changed; a body only when
+  the why is not obvious from the diff;
+- pull requests are short and objective: what changed and why, a few bullets at most —
+  no walls of text, no restating the diff, no feature tours;
 - do not skip hooks or signing (`--no-verify`, `--no-gpg-sign`) unless asked;
 - never co-author a commit: no `Co-Authored-By:` trailer or any other agent attribution
   in the message — the commit is the user's;
