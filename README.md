@@ -72,6 +72,11 @@ turns the guards on in every clone:
 Whoever clones the project later is asked whether to install it when trusting the
 folder — they do not need to repeat the steps above.
 
+**Windows:** `.claude` and `CLAUDE.md` are symlinks. Turn on Developer Mode (Settings →
+System → For developers) and clone with `git clone -c core.symlinks=true ...`; otherwise
+git checks them out as small text files and the harness is silently off. Already cloned?
+`/agent-kit:scaffold` detects it and repairs the links.
+
 ## Update a project that already has the harness
 
 Nothing is re-created and nothing is replaced without a diff and a yes:
@@ -161,6 +166,8 @@ flow:
 # 2. bump version in plugin.json (semver)
 claude plugin validate . --strict && claude plugin validate .claude-plugin/plugin.json --strict
 for t in hooks/*.test.sh; do bash "$t" || break; done
+# when a skill changed: full memory + rules passes on the fixtures in evals/ (costs real runs)
+claude plugin eval . --scaffold --allow-tools Bash Write Edit --runs 3
 git commit -am "feat(agent-kit): <what changed>"
 claude plugin tag agent-kit          # creates agent-kit--v0.9.0, checking that plugin.json
                                 # and the marketplace.json entry agree

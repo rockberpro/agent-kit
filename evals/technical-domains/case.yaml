@@ -1,0 +1,43 @@
+schema_version: "1.1"
+name: technical-domains
+description: >
+  A websocket chat has technical domains only. Each still gets a note and a domain
+  rule, and the notes record invariants instead of inventing business rules.
+tags: [memory, rules, domains]
+context:
+  scaffold_script: setup.sh
+execution:
+  prompt: |
+    Map this repository's memory with the agent-kit memory skill (full pass), then write
+    its rules with the agent-kit rules skill (full pass).
+    Everything you would ask approval for is approved in advance. Commit policy: the
+    agent may commit on its own, one-line conventional commits in English, never push.
+    Do not ask business questions; record them as open questions in the notes.
+    Do not commit.
+  max_turns: 80
+  timeout_seconds: 1200
+  allowed_tools: [Read, Glob, Grep, Bash, Write, Edit, Skill, Agent]
+# ponytail: one run per case, each is a full memory + rules pass; --runs 3 before a release
+runs: 1
+graders:
+  - { type: tool_used, name: used-skill, tool: Skill, min: 1 }
+  - { type: file_exists, name: map, path: .agents/memory/domains.md }
+  - { type: file_exists, name: note-transport, path: .agents/memory/domain-transport.md }
+  - { type: file_exists, name: note-presence, path: .agents/memory/domain-presence.md }
+  - { type: file_exists, name: note-delivery, path: .agents/memory/domain-delivery.md }
+  - { type: file_exists, name: rule-transport, path: .agents/rules/domain-transport.md }
+  - { type: file_exists, name: rule-presence, path: .agents/rules/domain-presence.md }
+  - { type: file_exists, name: rule-delivery, path: .agents/rules/domain-delivery.md }
+  - type: regex
+    name: rule-delivery-orders-read
+    target: { source: file, path: .agents/rules/domain-delivery.md }
+    pattern: "domain-delivery\\.md"
+  - type: llm
+    name: invariants-not-business
+    focus: files
+    criteria: >
+      The notes record the technical invariants: per-room ordering by sequence number,
+      at-least-once delivery with ack so clients dedupe by message id, the 30s heartbeat
+      closing with 4000, and the 5s presence grace period. They do not invent business
+      rules, user profiles, legal or institutional constraints, or business entity life
+      cycles.
