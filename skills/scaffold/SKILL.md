@@ -67,6 +67,21 @@ CLAUDE.md -> AGENTS.md
      (`git mv CLAUDE.md AGENTS.md`) and create the symlink. Content is preserved.
    - `.agents/settings.json` exists but is missing a `deny` entry or the plugin → step 3
      adds what is missing, preserving the rest.
+   - `.claude` or `CLAUDE.md` exists but is **not a symlink** (`[ ! -L .claude ]`) —
+     almost always Windows:
+     - a small file whose content is just `.agents` / `AGENTS.md` → the repository was
+       cloned with `core.symlinks=false`, and Claude Code sees neither the settings nor
+       the instructions. Repair, no content is at stake:
+
+       ```bash
+       git config core.symlinks true && rm .claude CLAUDE.md && git checkout -- .claude CLAUDE.md
+       ```
+
+       Needs Developer Mode on (below); still not a link afterwards → stop and say so.
+     - a real `.claude/` directory, or a `CLAUDE.md` with its own content next to an
+       `AGENTS.md` → a copy made by an older `ln -s`, or a harness from before agent-kit.
+       Diff it against `.agents/` / `AGENTS.md`, show what only the copy has, and **ask**
+       before merging it in and replacing the copy with the link.
 
 2. Create whatever structure is missing:
 
@@ -75,8 +90,15 @@ CLAUDE.md -> AGENTS.md
    [ -e .agents/.gitignore ] || printf 'settings.local.json\n.obsidian\n' > .agents/.gitignore
    # A dangling symlink is invisible to -e but still occupies the name, so ln fails.
    if [ -L .claude ] && [ ! -e .claude ]; then rm .claude; fi
-   [ -e .claude ] || ln -s .agents .claude
+   [ -e .claude ] || MSYS=winsymlinks:nativestrict ln -s .agents .claude
    ```
+
+   `MSYS=winsymlinks:nativestrict` matters only in Git Bash on Windows, where a plain
+   `ln -s` silently **copies** instead — `.claude` becomes a stale duplicate of
+   `.agents`. With it, `ln` makes a real link or fails. It fails → Windows is not
+   allowing symlinks: stop, ask the user to turn on Developer Mode (Settings → System →
+   For developers), then `git config core.symlinks true`, and run again. Never fall back
+   to a copy.
 
    With `memory/` comes its anti-drift rule — the always-on instruction to fix a note in
    the same task that made it wrong, which `memory-drift-guard` then enforces at commit:
@@ -112,7 +134,7 @@ CLAUDE.md -> AGENTS.md
    if [ -L CLAUDE.md ] && [ ! -e CLAUDE.md ]; then rm CLAUDE.md; fi   # dangling: drop it
    [ -e AGENTS.md ] || [ -L CLAUDE.md ] || [ ! -e CLAUDE.md ] || git mv CLAUDE.md AGENTS.md
    [ -e AGENTS.md ] || touch AGENTS.md          # then write the content below
-   [ -e CLAUDE.md ] || ln -s AGENTS.md CLAUDE.md
+   [ -e CLAUDE.md ] || MSYS=winsymlinks:nativestrict ln -s AGENTS.md CLAUDE.md
    ```
 
    If `AGENTS.md` does not mention the memory yet, append this (leaving the rest
@@ -133,7 +155,10 @@ CLAUDE.md -> AGENTS.md
    (pt-BR).`
 
 5. Report what you created (created vs. already existed), and say the plugin only
-   activates after `/plugin marketplace update` + a session restart.
+   activates after `/plugin marketplace update` + a session restart. Confirm both links
+   are real (`[ -L .claude ] && [ -L CLAUDE.md ]`), and tell Windows teammates to clone
+   with symlinks on (`git clone -c core.symlinks=true`, Developer Mode enabled) — without
+   it their `.claude` is a text file and the harness is silently off.
 
 6. **Hand off to the mapping skills.** The structure is empty until they run; both
    read a lot and ask before writing, so offer them instead of starting unasked:

@@ -72,6 +72,11 @@ turns the guards on in every clone:
 Whoever clones the project later is asked whether to install it when trusting the
 folder — they do not need to repeat the steps above.
 
+**Windows:** `.claude` and `CLAUDE.md` are symlinks. Turn on Developer Mode (Settings →
+System → For developers) and clone with `git clone -c core.symlinks=true ...`; otherwise
+git checks them out as small text files and the harness is silently off. Already cloned?
+`/agent-kit:scaffold` detects it and repairs the links.
+
 ## Update a project that already has the harness
 
 Nothing is re-created and nothing is replaced without a diff and a yes:
