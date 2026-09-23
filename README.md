@@ -1,6 +1,6 @@
 # Agent KIT
 
-Claude Code plugin that sets up an agent harness on a new project: guards, the
+Claude Code plugin that sets up an agent context on a new project: guards, the
 `.agents/` structure, and the skills that map the repository into memory and rules.
 
 The repository root is the plugin and also a one-entry marketplace, both called
@@ -75,10 +75,10 @@ folder — they do not need to repeat the steps above.
 
 **Windows:** `.claude` and `CLAUDE.md` are symlinks. Turn on Developer Mode (Settings →
 System → For developers) and clone with `git clone -c core.symlinks=true ...`; otherwise
-git checks them out as small text files and the harness is silently off. Already cloned?
+git checks them out as small text files and the context is silently off. Already cloned?
 `/agent-kit:scaffold` detects it and repairs the links.
 
-## Update a project that already has the harness
+## Update a project that already has the context
 
 Nothing is re-created and nothing is replaced without a diff and a yes:
 
@@ -150,7 +150,7 @@ All three guards are checks in one hook, `hooks/guard.sh`, run before every Bash
   the failures and their cause. Never edits.
 - **agent `agent-kit:reviewer`** — read-only: checks a diff against the project's own
   memory, rules and commit/PR policy, the part a generic review does not know.
-- **skills `/agent-kit:update-{all,hooks,memory,rules}`** — review an existing harness;
+- **skills `/agent-kit:update-{all,hooks,memory,rules}`** — review an existing context;
   see *Update a project* above.
 
 ## Publish
