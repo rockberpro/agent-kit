@@ -3,7 +3,8 @@
 No `paths:` on purpose: it applies to any edit, so it loads in every session.
 
 - Before changing code in an area, read the note that covers it — index:
-  `.agents/memory/MEMORY.md`.
+  `.agents/memory/MEMORY.md`. Entering a domain means reading its
+  `domain-*.md` first, even just to investigate.
 - When code and note diverge — because you changed the code, or found the note wrong —
   fix the note **in the same task**, in place. It describes the current state; no
   changelog, no "update later".

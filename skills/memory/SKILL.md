@@ -179,10 +179,17 @@ For each module, **one line only** in this phase: what it does in business terms
 code terms), relative weight, and whom it talks to. Resist going deeper — you do not yet
 know enough to know what matters.
 
-## Phase 4 — Business domain → `domains.md`
+## Phase 4 — Domain → `domains.md`
 
 The most valuable phase and the one the code gives least on its own. Without it the
 agent knows where to change and not what it is changing.
+
+A domain is not always a business. A websocket chat, a library or an infrastructure
+service may have no business rules at all; its domains are technical (connections,
+presence, message delivery) and what the notes record are **invariants** — ordering,
+delivery guarantees, reconnect behaviour, protocol versions. Take from the bullets below
+only what exists; never invent a business rule, a life cycle or a user profile to fill
+the shape.
 
 - **Find the entity that crosses the whole system** and follow its life cycle end to
   end, naming each transition and the module that owns it. Almost every business system
@@ -194,6 +201,24 @@ agent knows where to change and not what it is changing.
   decision, legal deadline, regulator obligation, contract, or "it is like this because
   X happened in 2014". No amount of reading recovers that, and it is exactly what causes
   rework when the agent assumes wrong. List the questions and ask them in one go.
+
+**More than one domain** (billing, inventory, HR; or transport, presence, delivery —
+each with its own vocabulary and rules, usually its own directories or tables): split.
+
+- `domains.md` becomes the **map**: one line per domain, the boundaries between them,
+  the entities, messages and events that cross a boundary, and who owns each hand-off.
+- One `domain-<name>.md` per domain: its vocabulary, flows and what only it obeys —
+  business rules where there are any, technical invariants where there are not. Its
+  `paths:` declare the domain's code, so drift is caught at commit.
+- Every domain note gets a **domain rule** of the same name (`rules/domain-<name>.md`)
+  whose globs cover the whole domain and whose first line orders reading the note —
+  that is what makes the agent read it when it navigates into the domain, not only
+  when it edits. Hand them to `/agent-kit:rules`; they are mandatory, not candidates.
+- A module inside a domain stays a section of the domain note until it outgrows one
+  read; then it gets its own `module-*.md` with the narrower glob, and the domain
+  note's `paths:` drop it (notes must not overlap). The domain rule keeps covering it.
+
+One domain → keep the single `domains.md`, no domain rules.
 
 ## Phase 5 — Deepen module by module, on demand
 
@@ -221,9 +246,12 @@ links to its neighbours. Start with the [architecture](architecture.md).
 ## Graph map
 
 ### Foundations
-- [Business domains](domains.md) — <hook>
+- [Domains](domains.md) — <hook>
 - [Conventions and non-negotiables](conventions.md) — <hook>
 - [Overall architecture](architecture.md) — <hook>
+
+### Domains (when there is more than one)
+- [...](domain-....md) — <hook>
 
 ### Business modules
 - [...](module-....md) — <hook>
@@ -283,8 +311,8 @@ knowledge.
 ## Report
 
 At the end: notes created/extended, what went into `AGENTS.md`, the open questions still
-unanswered, and the **rule candidates** (area + one line each) — offer
-`/agent-kit:rules` for them.
+unanswered, the **domain rules** owed (one per `domain-*.md`, with its globs), and the
+**rule candidates** (area + one line each) — offer `/agent-kit:rules` for them.
 
 ## Maintenance
 

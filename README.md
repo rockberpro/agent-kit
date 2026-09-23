@@ -123,13 +123,16 @@ All three guards are checks in one hook, `hooks/guard.sh`, run before every Bash
 - **skill `/agent-kit:scaffold`** — sets up `.agents/` (memory, rules, settings,
   `.claude` symlink) in a repository that does not have it yet.
 - **skill `/agent-kit:memory [area]`** — the mapping procedure: cheap reconnaissance,
-  non-negotiables into `AGENTS.md`, architecture, module map, business domain, then the
-  `MEMORY.md` index; with an area, deepens just that one. Carries the criteria for what
-  makes a note worth reading and where each fact goes (`AGENTS.md` / `rules/` /
-  `memory/`).
+  non-negotiables into `AGENTS.md`, architecture, module map, domains, then the
+  `MEMORY.md` index; with an area, deepens just that one. A system with several
+  domains (business or technical) gets one `domain-*.md` note each plus a
+  `domains.md` map. Carries the criteria for what makes a note worth reading and where
+  each fact goes (`AGENTS.md` / `rules/` / `memory/`).
 - **skill `/agent-kit:rules [area]`** — path-scoped rules in `.agents/rules/`: asks the
   commit policy and writes the always-on `commit.md`, then one short imperative rule per
-  area, globs checked against `git ls-files`.
+  area, globs checked against `git ls-files`. Every `domain-*.md` note gets a mandatory
+  domain rule over the domain's globs that orders reading the note, so the agent reads
+  it as soon as it opens a file in that domain.
 - **agent `agent-kit:explorer`** — read-only investigator: maps a new demand or the
   blast radius of a change, returns a report, never edits. The `memory` and
   `update-memory` skills fan out to it.
